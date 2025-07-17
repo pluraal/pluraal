@@ -1,5 +1,5 @@
 {
-  "name": "pluraal",
+  "name": "@pluraal/pluraal",
   "version": "1.0.0",
   "description": "A lean TypeScript MCP server implementation",
   "type": "module",
