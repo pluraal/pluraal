@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "pluraal": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "build/index.js"
+      ]
+    }
+  }
+}
