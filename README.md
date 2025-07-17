@@ -171,6 +171,24 @@ For more information about the Model Context Protocol SDK:
 - [TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
 - [Python SDK](https://github.com/modelcontextprotocol/create-python-server)
 
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+
+- Setting up the development environment
+- Code style and standards
+- Testing requirements
+- Pull request process
+
+### CI/CD
+
+This project uses GitHub Actions for continuous integration:
+
+- **Pull Request Builds**: Automatically runs tests, linting, and builds on all PRs
+- **Security Audits**: Regular dependency vulnerability scans
+- **Dependency Updates**: Automated dependency update PRs
+- **Releases**: Automated releases when tags are pushed
+
 ## License
 
 MIT
