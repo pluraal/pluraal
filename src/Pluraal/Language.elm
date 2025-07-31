@@ -6,10 +6,15 @@ module Pluraal.Language exposing
     , IfThenElse
     , RuleChain
     , FiniteBranch
+    , Scope
+    , Input
+    , DataPoint
+    , Type(..)
     , evaluate
     , evaluateRule
     , evaluateRuleChain
     , evaluateFiniteBranch
+    , evaluateScope
     )
 
 {-| The Pluraal Language implementation in Elm.
@@ -18,10 +23,10 @@ This module provides types and functions for working with the Pluraal declarativ
 for defining rules and logic.
 
 # Core Types
-@docs Expression, Literal, Branch, Rule, IfThenElse, RuleChain, FiniteBranch
+@docs Expression, Literal, Branch, Rule, IfThenElse, RuleChain, FiniteBranch, Scope, Input, DataPoint, Type
 
 # Evaluation
-@docs evaluate, evaluateRule, evaluateRuleChain, evaluateFiniteBranch
+@docs evaluate, evaluateRule, evaluateRuleChain, evaluateFiniteBranch, evaluateScope
 
 -}
 
@@ -37,6 +42,7 @@ type Expression
     = LiteralExpr Literal
     | VariableExpr String
     | BranchExpr Branch
+    | ScopeExpr Scope
 
 
 {-| Literal values in the Pluraal language
@@ -90,6 +96,39 @@ type alias FiniteBranch =
     }
 
 
+{-| Type system for scope inputs
+-}
+type Type
+    = StringType
+    | NumberType
+    | BoolType
+
+
+{-| Input definition with name and type
+-}
+type alias Input =
+    { name : String
+    , type_ : Type
+    }
+
+
+{-| Data point calculated from inputs
+-}
+type alias DataPoint =
+    { name : String
+    , expression : Expression
+    }
+
+
+{-| Scope with typed inputs and calculated data points
+-}
+type alias Scope =
+    { inputs : List Input
+    , dataPoints : List DataPoint
+    , result : Expression
+    }
+
+
 -- EVALUATION
 
 
@@ -111,6 +150,9 @@ evaluate context expr =
 
         BranchExpr branch ->
             evaluateBranch context branch
+
+        ScopeExpr scope ->
+            evaluateScope context scope
 
 
 {-| Evaluate a branching construct
@@ -220,3 +262,105 @@ evaluateFiniteBranch context { branchOn, cases, otherwise } =
 
         Err err ->
             Err err
+
+
+{-| Validate that a literal value matches the expected type
+-}
+validateType : Type -> Literal -> Bool
+validateType expectedType literal =
+    case ( expectedType, literal ) of
+        ( StringType, StringLiteral _ ) ->
+            True
+
+        ( NumberType, NumberLiteral _ ) ->
+            True
+
+        ( BoolType, BoolLiteral _ ) ->
+            True
+
+        _ ->
+            False
+
+
+{-| Evaluate a scope with type checking and data point calculation
+-}
+evaluateScope : Dict String Expression -> Scope -> Result String Expression
+evaluateScope context { inputs, dataPoints, result } =
+    -- First, validate that all required inputs are present and have correct types
+    case validateInputs context inputs of
+        Err err ->
+            Err err
+
+        Ok () ->
+            -- Calculate data points in order, building up the context
+            case calculateDataPoints context dataPoints of
+                Err err ->
+                    Err err
+
+                Ok extendedContext ->
+                    -- Evaluate the result expression with the extended context
+                    evaluate extendedContext result
+
+
+{-| Validate that all inputs are present in context and have correct types
+-}
+validateInputs : Dict String Expression -> List Input -> Result String ()
+validateInputs context inputs =
+    validateInputsHelper context inputs
+
+
+{-| Helper function to validate inputs recursively
+-}
+validateInputsHelper : Dict String Expression -> List Input -> Result String ()
+validateInputsHelper context inputs =
+    case inputs of
+        [] ->
+            Ok ()
+
+        input :: remainingInputs ->
+            case Dict.get input.name context of
+                Nothing ->
+                    Err ("Required input not found: " ++ input.name)
+
+                Just expr ->
+                    case evaluate context expr of
+                        Ok (LiteralExpr literal) ->
+                            if validateType input.type_ literal then
+                                validateInputsHelper context remainingInputs
+
+                            else
+                                Err ("Input " ++ input.name ++ " has incorrect type")
+
+                        Ok _ ->
+                            Err ("Input " ++ input.name ++ " must be a literal value")
+
+                        Err err ->
+                            Err err
+
+
+{-| Calculate all data points and extend the context
+-}
+calculateDataPoints : Dict String Expression -> List DataPoint -> Result String (Dict String Expression)
+calculateDataPoints context dataPoints =
+    calculateDataPointsHelper context context dataPoints
+
+
+{-| Helper function to calculate data points recursively
+-}
+calculateDataPointsHelper : Dict String Expression -> Dict String Expression -> List DataPoint -> Result String (Dict String Expression)
+calculateDataPointsHelper originalContext currentContext dataPoints =
+    case dataPoints of
+        [] ->
+            Ok currentContext
+
+        dataPoint :: remainingDataPoints ->
+            case evaluate currentContext dataPoint.expression of
+                Ok value ->
+                    let
+                        extendedContext =
+                            Dict.insert dataPoint.name value currentContext
+                    in
+                    calculateDataPointsHelper originalContext extendedContext remainingDataPoints
+
+                Err err ->
+                    Err ("Error calculating data point " ++ dataPoint.name ++ ": " ++ err)

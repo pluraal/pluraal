@@ -200,6 +200,72 @@ The Pluraal language is a declarative language for defining rules and logic, imp
 - **If-then-else**: Simple conditional logic
 - **Rule chains**: Sequential rule evaluation with fallbacks
 - **Finite branches**: Pattern matching on string values
+- **Scopes**: Typed inputs with calculated data points
+
+### Scopes
+
+Scopes provide a powerful feature for defining typed inputs and calculated data points. A scope includes:
+
+- **Inputs**: Named variables with specific types (string, number, bool)
+- **Data Points**: Calculations derived from inputs and other data points
+- **Result**: The final expression to evaluate
+
+#### Type System
+
+Scopes support a simple type system:
+- `StringType`: String values
+- `NumberType`: Numeric values  
+- `BoolType`: Boolean values
+
+#### Example Scope Usage
+
+```elm
+-- Define a scope with typed inputs and calculated data points
+inputs = 
+    [ { name = "radius", type_ = NumberType }
+    , { name = "pi", type_ = NumberType }
+    ]
+
+dataPoints =
+    [ { name = "area", expression = -- calculation expression here }
+    ]
+
+result = VariableExpr "area"
+
+scope = { inputs = inputs, dataPoints = dataPoints, result = result }
+scopeExpr = ScopeExpr scope
+
+-- Provide input context
+context = Dict.fromList 
+    [ ( "radius", LiteralExpr (NumberLiteral 5.0) )
+    , ( "pi", LiteralExpr (NumberLiteral 3.14159) )
+    ]
+
+-- Evaluate scope
+result = evaluate context scopeExpr
+```
+
+#### JSON Representation for Scopes
+
+```json
+{
+  "inputs": [
+    { "name": "radius", "type": "number" },
+    { "name": "pi", "type": "number" }
+  ],
+  "dataPoints": [
+    { 
+      "name": "area", 
+      "expression": {
+        "if": true,
+        "then": { "type": "number", "value": 78.54 },
+        "else": { "type": "number", "value": 0 }
+      }
+    }
+  ],
+  "result": "area"
+}
+```
 
 ### Example Usage
 

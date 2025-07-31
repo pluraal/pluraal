@@ -2,7 +2,7 @@ module LanguageTest exposing (..)
 
 import Dict
 import Expect
-import Pluraal.Language as Language exposing (..)
+import Pluraal.Language exposing (..)
 import Test exposing (..)
 
 
@@ -139,5 +139,88 @@ suite =
                     in
                     evaluate context expr
                         |> Expect.equal (Ok otherwiseExpr)
+            ]
+        , describe "Scopes"
+            [ test "Simple scope with typed inputs and data points" <|
+                \_ ->
+                    let
+                        inputs = 
+                            [ { name = "x", type_ = NumberType }
+                            , { name = "y", type_ = NumberType }
+                            ]
+                        dataPoints =
+                            [ { name = "sum", expression = BranchExpr (IfThenElseBranch { condition = LiteralExpr (BoolLiteral True), then_ = LiteralExpr (NumberLiteral 10), else_ = LiteralExpr (NumberLiteral 0) }) }
+                            ]
+                        result = VariableExpr "sum"
+                        scope = { inputs = inputs, dataPoints = dataPoints, result = result }
+                        expr = ScopeExpr scope
+                        context = Dict.fromList 
+                            [ ( "x", LiteralExpr (NumberLiteral 5) )
+                            , ( "y", LiteralExpr (NumberLiteral 3) )
+                            ]
+                    in
+                    evaluate context expr
+                        |> Expect.equal (Ok (LiteralExpr (NumberLiteral 10)))
+            , test "Scope with data point referencing input" <|
+                \_ ->
+                    let
+                        inputs = 
+                            [ { name = "name", type_ = StringType }
+                            ]
+                        dataPoints =
+                            [ { name = "greeting", expression = VariableExpr "name" }
+                            ]
+                        result = VariableExpr "greeting"
+                        scope = { inputs = inputs, dataPoints = dataPoints, result = result }
+                        expr = ScopeExpr scope
+                        context = Dict.singleton "name" (LiteralExpr (StringLiteral "Alice"))
+                    in
+                    evaluate context expr
+                        |> Expect.equal (Ok (LiteralExpr (StringLiteral "Alice")))
+            , test "Scope with missing input fails" <|
+                \_ ->
+                    let
+                        inputs = 
+                            [ { name = "x", type_ = NumberType }
+                            ]
+                        dataPoints = []
+                        result = VariableExpr "x"
+                        scope = { inputs = inputs, dataPoints = dataPoints, result = result }
+                        expr = ScopeExpr scope
+                        context = Dict.empty
+                    in
+                    evaluate context expr
+                        |> Expect.equal (Err "Required input not found: x")
+            , test "Scope with wrong input type fails" <|
+                \_ ->
+                    let
+                        inputs = 
+                            [ { name = "x", type_ = NumberType }
+                            ]
+                        dataPoints = []
+                        result = VariableExpr "x"
+                        scope = { inputs = inputs, dataPoints = dataPoints, result = result }
+                        expr = ScopeExpr scope
+                        context = Dict.singleton "x" (LiteralExpr (StringLiteral "not a number"))
+                    in
+                    evaluate context expr
+                        |> Expect.equal (Err "Input x has incorrect type")
+            , test "Scope with chained data points" <|
+                \_ ->
+                    let
+                        inputs = 
+                            [ { name = "base", type_ = NumberType }
+                            ]
+                        dataPoints =
+                            [ { name = "doubled", expression = VariableExpr "base" }
+                            , { name = "final", expression = VariableExpr "doubled" }
+                            ]
+                        result = VariableExpr "final"
+                        scope = { inputs = inputs, dataPoints = dataPoints, result = result }
+                        expr = ScopeExpr scope
+                        context = Dict.singleton "base" (LiteralExpr (NumberLiteral 7))
+                    in
+                    evaluate context expr
+                        |> Expect.equal (Ok (LiteralExpr (NumberLiteral 7)))
             ]
         ]

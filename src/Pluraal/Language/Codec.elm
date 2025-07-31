@@ -7,6 +7,14 @@ module Pluraal.Language.Codec exposing
     , decodeBranch
     , encodeRule
     , decodeRule
+    , encodeScope
+    , decodeScope
+    , encodeType
+    , decodeType
+    , encodeInput
+    , decodeInput
+    , encodeDataPoint
+    , decodeDataPoint
     )
 
 {-| JSON encoding and decoding for the Pluraal Language.
@@ -26,9 +34,21 @@ constructs to and from JSON format.
 # Rule Encoding/Decoding
 @docs encodeRule, decodeRule
 
+# Scope Encoding/Decoding
+@docs encodeScope, decodeScope
+
+# Type System Encoding/Decoding
+@docs encodeType, decodeType
+
+# Input Encoding/Decoding
+@docs encodeInput, decodeInput
+
+# DataPoint Encoding/Decoding
+@docs encodeDataPoint, decodeDataPoint
+
 -}
 
-import Dict exposing (Dict)
+import Dict
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Pluraal.Language exposing (..)
@@ -50,6 +70,9 @@ encodeExpression expr =
 
         BranchExpr branch ->
             encodeBranch branch
+
+        ScopeExpr scope ->
+            encodeScope scope
 
 
 {-| Encode a literal to JSON
@@ -133,6 +156,52 @@ encodeRule { when, then_ } =
         ]
 
 
+{-| Encode a scope to JSON
+-}
+encodeScope : Scope -> Value
+encodeScope { inputs, dataPoints, result } =
+    Encode.object
+        [ ( "inputs", Encode.list encodeInput inputs )
+        , ( "dataPoints", Encode.list encodeDataPoint dataPoints )
+        , ( "result", encodeExpression result )
+        ]
+
+
+{-| Encode a type to JSON
+-}
+encodeType : Type -> Value
+encodeType type_ =
+    case type_ of
+        StringType ->
+            Encode.string "string"
+
+        NumberType ->
+            Encode.string "number"
+
+        BoolType ->
+            Encode.string "bool"
+
+
+{-| Encode an input to JSON
+-}
+encodeInput : Input -> Value
+encodeInput { name, type_ } =
+    Encode.object
+        [ ( "name", Encode.string name )
+        , ( "type", encodeType type_ )
+        ]
+
+
+{-| Encode a data point to JSON
+-}
+encodeDataPoint : DataPoint -> Value
+encodeDataPoint { name, expression } =
+    Encode.object
+        [ ( "name", Encode.string name )
+        , ( "expression", encodeExpression expression )
+        ]
+
+
 -- DECODING
 
 
@@ -144,6 +213,7 @@ decodeExpression =
         [ Decode.map LiteralExpr decodeLiteral
         , Decode.map VariableExpr Decode.string
         , Decode.map BranchExpr (Decode.lazy (\_ -> decodeBranch))
+        , Decode.map ScopeExpr (Decode.lazy (\_ -> decodeScope))
         ]
 
 
@@ -206,3 +276,53 @@ decodeFiniteBranch =
         (Decode.field "branchOn" (Decode.lazy (\_ -> decodeExpression)))
         (Decode.field "when" (Decode.dict (Decode.lazy (\_ -> decodeExpression))))
         (Decode.maybe (Decode.field "otherwise" (Decode.lazy (\_ -> decodeExpression))))
+
+
+{-| Decode a scope from JSON
+-}
+decodeScope : Decoder Scope
+decodeScope =
+    Decode.map3 (\inputs dataPoints result -> { inputs = inputs, dataPoints = dataPoints, result = result })
+        (Decode.field "inputs" (Decode.list (Decode.lazy (\_ -> decodeInput))))
+        (Decode.field "dataPoints" (Decode.list (Decode.lazy (\_ -> decodeDataPoint))))
+        (Decode.field "result" (Decode.lazy (\_ -> decodeExpression)))
+
+
+{-| Decode a type from JSON
+-}
+decodeType : Decoder Type
+decodeType =
+    Decode.string
+        |> Decode.andThen
+            (\str ->
+                case str of
+                    "string" ->
+                        Decode.succeed StringType
+
+                    "number" ->
+                        Decode.succeed NumberType
+
+                    "bool" ->
+                        Decode.succeed BoolType
+
+                    _ ->
+                        Decode.fail ("Unknown type: " ++ str)
+            )
+
+
+{-| Decode an input from JSON
+-}
+decodeInput : Decoder Input
+decodeInput =
+    Decode.map2 (\name type_ -> { name = name, type_ = type_ })
+        (Decode.field "name" Decode.string)
+        (Decode.field "type" (Decode.lazy (\_ -> decodeType)))
+
+
+{-| Decode a data point from JSON
+-}
+decodeDataPoint : Decoder DataPoint
+decodeDataPoint =
+    Decode.map2 (\name expression -> { name = name, expression = expression })
+        (Decode.field "name" Decode.string)
+        (Decode.field "expression" (Decode.lazy (\_ -> decodeExpression)))
