@@ -39,8 +39,14 @@ jobs:
       - name: Run tests
         run: npm run test:coverage
 
+      - name: Run Elm tests
+        run: npm run test:elm
+
       - name: Build project
         run: npm run build
+
+      - name: Build Elm library
+        run: npm run build:elm
 
       - name: Test MCP server startup
         run: |

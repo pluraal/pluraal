@@ -9,16 +9,20 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:elm": "elm make src/Pluraal/Language.elm --output=NUL",
     "dev": "tsx src/index.ts",
     "start": "node build/index.js",
     "test": "vitest",
+    "test:elm": "elm-test",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "elm:install": "elm install",
+    "elm:repl": "elm repl"
   },
   "keywords": [
     "mcp",
@@ -40,6 +44,8 @@
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "@vitest/coverage-v8": "^2.1.8",
+    "elm": "^0.19.1-6",
+    "elm-test": "^0.19.1-revision12",
     "eslint": "^9.15.0",
     "prettier": "^3.3.3",
     "tsx": "^4.19.2",
