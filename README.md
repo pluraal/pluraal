@@ -1,13 +1,14 @@
-# Pluraal MCP Server
+# Pluraal MCP Server & Language Library
 
-A lean TypeScript implementation of a Model Context Protocol (MCP) server with comprehensive tooling for development.
+A lean TypeScript implementation of a Model Context Protocol (MCP) server with a declarative language library implemented in Elm.
 
 ## Features
 
-- **TypeScript**: Full type safety and modern JavaScript features
+- **TypeScript MCP Server**: Full type safety and modern JavaScript features
+- **Elm Language Library**: Declarative language for rules and logic
 - **MCP SDK**: Built with the official Model Context Protocol SDK
 - **Linting**: ESLint with TypeScript support and consistent code style rules
-- **Testing**: Vitest for fast unit testing with coverage reporting
+- **Testing**: Vitest for TypeScript and elm-test for Elm
 - **Formatting**: Prettier for consistent code formatting
 - **Development**: Hot reload with tsx for rapid development
 
@@ -17,6 +18,7 @@ A lean TypeScript implementation of a Model Context Protocol (MCP) server with c
 
 - Node.js 16+
 - npm or yarn
+- Elm 0.19.1 (installed automatically via npm)
 
 ### Installation
 
@@ -24,17 +26,30 @@ A lean TypeScript implementation of a Model Context Protocol (MCP) server with c
 npm install
 ```
 
-### Development
+### MCP Server Development
 
 ```bash
 # Start development server with hot reload
 npm run dev
 
-# Build the project
+# Build the TypeScript project
 npm run build
 
 # Run the built server
 npm start
+```
+
+### Elm Language Library Development
+
+```bash
+# Build the Elm library
+npm run build:elm
+
+# Run Elm tests
+npm run test:elm
+
+# Start Elm REPL
+npm run elm:repl
 ```
 
 ### Testing
@@ -147,20 +162,138 @@ To use this server with Claude for Desktop, add the following to your Claude con
 ```
 pluraal/
 ├── src/
-│   ├── index.ts          # Main MCP server implementation
-│   └── index.test.ts     # Example tests
+│   ├── Pluraal/
+│   │   └── Language.elm     # Elm language library
+│   ├── index.ts             # Main MCP server implementation
+│   └── index.test.ts        # TypeScript tests
+├── tests/
+│   ├── LanguageTest.elm     # Elm language tests
+│   └── elm.json             # Elm test configuration
 ├── .vscode/
-│   ├── mcp.json          # MCP server configuration
-│   ├── extensions.json   # Recommended VS Code extensions
-│   └── settings.json     # VS Code workspace settings
-├── build/                # Compiled output (generated)
-├── coverage/             # Test coverage reports (generated)
-├── package.json          # Dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-├── vitest.config.ts      # Vitest testing configuration
-├── eslint.config.js      # ESLint configuration
-├── .prettierrc           # Prettier formatting configuration
-└── README.md             # This file
+│   ├── mcp.json             # MCP server configuration
+│   ├── extensions.json      # Recommended VS Code extensions
+│   └── settings.json        # VS Code workspace settings
+├── build/                   # Compiled output (generated)
+├── coverage/                # Test coverage reports (generated)
+├── elm-stuff/               # Elm dependencies (generated)
+├── elm.json                 # Elm package configuration
+├── package.json             # Dependencies and scripts
+├── tsconfig.json            # TypeScript configuration
+├── vitest.config.ts         # Vitest testing configuration
+├── eslint.config.js         # ESLint configuration
+├── .prettierrc              # Prettier formatting configuration
+└── README.md                # This file
+```
+
+## Pluraal Language
+
+The Pluraal language is a declarative language for defining rules and logic, implemented in Elm. It supports:
+
+### Data Types
+
+- **Literals**: Strings, numbers, booleans, and null
+- **Variables**: Named references to values
+- **Expressions**: Composable language constructs
+
+### Logic Constructs
+
+- **If-then-else**: Simple conditional logic
+- **Rule chains**: Sequential rule evaluation with fallbacks
+- **Finite branches**: Pattern matching on string values
+- **Scopes**: Typed inputs with calculated data points
+
+### Scopes
+
+Scopes provide a powerful feature for defining typed inputs and calculated data points. A scope includes:
+
+- **Inputs**: Named variables with specific types (string, number, bool)
+- **Data Points**: Calculations derived from inputs and other data points
+- **Result**: The final expression to evaluate
+
+#### Type System
+
+Scopes support a simple type system:
+- `StringType`: String values
+- `NumberType`: Numeric values  
+- `BoolType`: Boolean values
+
+#### Example Scope Usage
+
+```elm
+-- Define a scope with typed inputs and calculated data points
+inputs = 
+    [ { name = "radius", type_ = NumberType }
+    , { name = "pi", type_ = NumberType }
+    ]
+
+dataPoints =
+    [ { name = "area", expression = -- calculation expression here }
+    ]
+
+result = VariableExpr "area"
+
+scope = { inputs = inputs, dataPoints = dataPoints, result = result }
+scopeExpr = ScopeExpr scope
+
+-- Provide input context
+context = Dict.fromList 
+    [ ( "radius", LiteralExpr (NumberLiteral 5.0) )
+    , ( "pi", LiteralExpr (NumberLiteral 3.14159) )
+    ]
+
+-- Evaluate scope
+result = evaluate context scopeExpr
+```
+
+#### JSON Representation for Scopes
+
+```json
+{
+  "inputs": [
+    { "name": "radius", "type": "number" },
+    { "name": "pi", "type": "number" }
+  ],
+  "dataPoints": [
+    { 
+      "name": "area", 
+      "expression": {
+        "if": true,
+        "then": { "type": "number", "value": 78.54 },
+        "else": { "type": "number", "value": 0 }
+      }
+    }
+  ],
+  "result": "area"
+}
+```
+
+### Example Usage
+
+```elm
+import Pluraal.Language exposing (..)
+import Dict
+
+-- Simple if-then-else
+condition = LiteralExpr (BoolLiteral True)
+thenBranch = LiteralExpr (StringLiteral "Success")
+elseBranch = LiteralExpr (StringLiteral "Failure")
+ifExpr = BranchExpr (IfThenElseBranch { condition = condition, then_ = thenBranch, else_ = elseBranch })
+
+-- Evaluate with empty context
+result = evaluate Dict.empty ifExpr
+-- Result: Ok (LiteralExpr (StringLiteral "Success"))
+```
+
+### JSON Representation
+
+The language can be serialized to/from JSON following the specification:
+
+```json
+{
+  "if": { "type": "boolean", "value": true },
+  "then": "Success",
+  "else": "Failure"
+}
 ```
 
 ## MCP SDK Reference

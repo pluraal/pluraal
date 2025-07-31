@@ -31,8 +31,11 @@ jobs:
 
       - name: Check for vulnerabilities
         run: |
-          if npm audit --audit-level=high --json | jq '.vulnerabilities | length > 0'; then
-            echo "High-severity vulnerabilities found!"
+          VULN_COUNT=$(npm audit --audit-level=high --json | jq '.metadata.vulnerabilities.high + .metadata.vulnerabilities.critical')
+          if [ "$VULN_COUNT" -gt 0 ]; then
+            echo "High or critical severity vulnerabilities found: $VULN_COUNT"
             npm audit --audit-level=high
             exit 1
+          else
+            echo "No high or critical severity vulnerabilities found."
           fi

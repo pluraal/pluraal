@@ -47,6 +47,9 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
+# Elm
+elm-stuff/
+
 # Optional npm cache directory
 .npm
 

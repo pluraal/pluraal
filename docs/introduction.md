@@ -1,0 +1,7 @@
+Pluraal is a programming language for the new age of Ai assisted development. It was inspired by the realization that while Ai assisted coding shows a lot of promise building confidence requires extensive reviews and testing which nullifies a lot of the productivity gains. We think that the current tooling and SDLC process evolved to align with human working styles and not efficient for the new ERA where human and AI works together to achieve a result.
+
+For example software developers spend years or even decades to learn the nuances of the text encoding that is used to instruct computers but for people in general that representation is very inefficient. A person who is not trained in that field does not understand anything when they look at code. On the other hand, most people understand mathematical formulas, decision trees, tabular data or diagrams. So if we want to bring programmin closer to people we need to bring the language closer to those concepts.
+
+There's been attempts at this in the past usually labeled as low-code or no-code, but they haven't been very successful mostly because while visual representations are good for understanding the logic they are not very efficient for editing. And this is where LLMs come into the picture. If you can explain what you want in natural language you dion't need to edit the code directly, the LLM can do it for you and as a human being you can look at the visualization to verify the behavior.
+
+This fo course means that every piece of the programming language needs to be efficiently visualizable.
