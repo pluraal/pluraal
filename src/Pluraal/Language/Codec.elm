@@ -63,16 +63,22 @@ encodeExpression : Expression -> Value
 encodeExpression expr =
     case expr of
         LiteralExpr literal ->
-            encodeLiteral literal
+            Encode.object
+                [ ( "type", Encode.string "literal" )
+                , ( "value", encodeLiteral literal )
+                ]
 
         VariableExpr name ->
-            Encode.string name
+            Encode.object
+                [ ( "type", Encode.string "variable" )
+                , ( "name", Encode.string name )
+                ]
 
         BranchExpr branch ->
-            encodeBranch branch
-
-        ScopeExpr scope ->
-            encodeScope scope
+            Encode.object
+                [ ( "type", Encode.string "branch" )
+                , ( "value", encodeBranch branch )
+                ]
 
 
 {-| Encode a literal to JSON
@@ -209,12 +215,22 @@ encodeDataPoint { name, expression } =
 -}
 decodeExpression : Decoder Expression
 decodeExpression =
-    Decode.oneOf
-        [ Decode.map LiteralExpr decodeLiteral
-        , Decode.map VariableExpr Decode.string
-        , Decode.map BranchExpr (Decode.lazy (\_ -> decodeBranch))
-        , Decode.map ScopeExpr (Decode.lazy (\_ -> decodeScope))
-        ]
+    Decode.field "type" Decode.string
+        |> Decode.andThen
+            (\typeStr ->
+                case typeStr of
+                    "literal" ->
+                        Decode.map LiteralExpr (Decode.field "value" decodeLiteral)
+
+                    "variable" ->
+                        Decode.map VariableExpr (Decode.field "name" Decode.string)
+
+                    "branch" ->
+                        Decode.map BranchExpr (Decode.field "value" (Decode.lazy (\_ -> decodeBranch)))
+
+                    _ ->
+                        Decode.fail ("Unknown expression type: " ++ typeStr)
+            )
 
 
 {-| Decode a literal from JSON

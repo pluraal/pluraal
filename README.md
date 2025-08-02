@@ -5,7 +5,8 @@ A lean TypeScript implementation of a Model Context Protocol (MCP) server with a
 ## Features
 
 - **TypeScript MCP Server**: Full type safety and modern JavaScript features
-- **Elm Language Library**: Declarative language for rules and logic
+- **Elm Language Library**: Declarative language for rules and logic with Scope as a top-level construct
+- **Interactive UI**: Visual scope viewer and evaluator built in Elm
 - **MCP SDK**: Built with the official Model Context Protocol SDK
 - **Linting**: ESLint with TypeScript support and consistent code style rules
 - **Testing**: Vitest for TypeScript and elm-test for Elm
@@ -51,6 +52,30 @@ npm run test:elm
 # Start Elm REPL
 npm run elm:repl
 ```
+
+### Interactive Scope Viewer UI
+
+Try the visual interface for Pluraal scopes:
+
+```bash
+# Build the UI application
+elm make src/ScopeViewer.elm --output=scope-viewer.js
+
+# Start a local server to serve the application
+python -m http.server 8000
+
+# Open http://localhost:8000/index.html in your browser
+```
+
+The UI allows you to:
+
+- **Load scope definitions** dynamically from JSON files
+- **View scope structure** (inputs, data points, result expressions)
+- **Enter values** for typed inputs with validation
+- **Evaluate scopes** and see live results
+- **Handle errors** with clear feedback for loading and evaluation issues
+
+See [SCOPE_VIEWER.md](SCOPE_VIEWER.md) for detailed usage instructions.
 
 ### Testing
 
@@ -213,15 +238,16 @@ Scopes provide a powerful feature for defining typed inputs and calculated data 
 #### Type System
 
 Scopes support a simple type system:
+
 - `StringType`: String values
-- `NumberType`: Numeric values  
+- `NumberType`: Numeric values
 - `BoolType`: Boolean values
 
 #### Example Scope Usage
 
 ```elm
 -- Define a scope with typed inputs and calculated data points
-inputs = 
+inputs =
     [ { name = "radius", type_ = NumberType }
     , { name = "pi", type_ = NumberType }
     ]
@@ -236,7 +262,7 @@ scope = { inputs = inputs, dataPoints = dataPoints, result = result }
 scopeExpr = ScopeExpr scope
 
 -- Provide input context
-context = Dict.fromList 
+context = Dict.fromList
     [ ( "radius", LiteralExpr (NumberLiteral 5.0) )
     , ( "pi", LiteralExpr (NumberLiteral 3.14159) )
     ]
@@ -254,8 +280,8 @@ result = evaluate context scopeExpr
     { "name": "pi", "type": "number" }
   ],
   "dataPoints": [
-    { 
-      "name": "area", 
+    {
+      "name": "area",
       "expression": {
         "if": true,
         "then": { "type": "number", "value": 78.54 },

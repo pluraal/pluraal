@@ -153,13 +153,12 @@ suite =
                             ]
                         result = VariableExpr "sum"
                         scope = { inputs = inputs, dataPoints = dataPoints, result = result }
-                        expr = ScopeExpr scope
                         context = Dict.fromList 
                             [ ( "x", LiteralExpr (NumberLiteral 5) )
                             , ( "y", LiteralExpr (NumberLiteral 3) )
                             ]
                     in
-                    evaluate context expr
+                    evaluateScope context scope
                         |> Expect.equal (Ok (LiteralExpr (NumberLiteral 10)))
             , test "Scope with data point referencing input" <|
                 \_ ->
@@ -172,10 +171,9 @@ suite =
                             ]
                         result = VariableExpr "greeting"
                         scope = { inputs = inputs, dataPoints = dataPoints, result = result }
-                        expr = ScopeExpr scope
                         context = Dict.singleton "name" (LiteralExpr (StringLiteral "Alice"))
                     in
-                    evaluate context expr
+                    evaluateScope context scope
                         |> Expect.equal (Ok (LiteralExpr (StringLiteral "Alice")))
             , test "Scope with missing input fails" <|
                 \_ ->
@@ -186,10 +184,9 @@ suite =
                         dataPoints = []
                         result = VariableExpr "x"
                         scope = { inputs = inputs, dataPoints = dataPoints, result = result }
-                        expr = ScopeExpr scope
                         context = Dict.empty
                     in
-                    evaluate context expr
+                    evaluateScope context scope
                         |> Expect.equal (Err "Required input not found: x")
             , test "Scope with wrong input type fails" <|
                 \_ ->
@@ -200,10 +197,9 @@ suite =
                         dataPoints = []
                         result = VariableExpr "x"
                         scope = { inputs = inputs, dataPoints = dataPoints, result = result }
-                        expr = ScopeExpr scope
                         context = Dict.singleton "x" (LiteralExpr (StringLiteral "not a number"))
                     in
-                    evaluate context expr
+                    evaluateScope context scope
                         |> Expect.equal (Err "Input x has incorrect type")
             , test "Scope with chained data points" <|
                 \_ ->
@@ -217,10 +213,9 @@ suite =
                             ]
                         result = VariableExpr "final"
                         scope = { inputs = inputs, dataPoints = dataPoints, result = result }
-                        expr = ScopeExpr scope
                         context = Dict.singleton "base" (LiteralExpr (NumberLiteral 7))
                     in
-                    evaluate context expr
+                    evaluateScope context scope
                         |> Expect.equal (Ok (LiteralExpr (NumberLiteral 7)))
             ]
         ]

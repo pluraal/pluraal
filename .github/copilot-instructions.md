@@ -7,6 +7,8 @@ This is a dual-language project implementing a declarative language for rules an
 - **TypeScript**: MCP (Model Context Protocol) server implementation
 - **Elm**: Core language library with type-safe evaluation
 
+The language design separates `Scope` as a top-level construct (not an expression type), allowing for clear separation between expressions and scope evaluation.
+
 ## Architecture Patterns
 
 ### Module Organization
@@ -22,6 +24,13 @@ Follow the `OriginalModule.Codec` pattern for JSON serialization:
 - Use descriptive constructor names to avoid conflicts with type aliases
 - Examples: `IfThenElseBranch` instead of `IfThenElse` for constructors
 - Use `Decode.lazy` for recursive type decoders to handle cyclic dependencies
+
+### Elm Dependency Management
+
+- Use `elm install <package>` to add new Elm dependencies instead of manually editing `elm.json`
+- This ensures proper version resolution and constraint handling
+- Only edit `elm.json` manually for exposed-modules when creating new public modules
+- Let Elm's package manager handle dependency versions and compatibility
 
 ### Testing Requirements
 

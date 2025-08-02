@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pluraal Scope Viewer</title>
+    <link rel="stylesheet" href="scope-viewer.css" />
+  </head>
+
+  <body>
+    <div id="scope-viewer-app"></div>
+
+    <script src="scope-viewer.js"></script>
+    <script>
+      var app = Elm.ScopeViewer.init({
+        node: document.getElementById('scope-viewer-app'),
+      });
+    </script>
+  </body>
+</html>
