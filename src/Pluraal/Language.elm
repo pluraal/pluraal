@@ -20,7 +20,7 @@ module Pluraal.Language exposing
 {-| The Pluraal Language implementation in Elm.
 
 This module provides types and functions for working with the Pluraal declarative language
-for defining rules and logic.
+for defining rules and logic. Scope is now a separate top-level construct, not an expression type.
 
 # Core Types
 @docs Expression, Literal, Branch, Rule, IfThenElse, RuleChain, FiniteBranch, Scope, Input, DataPoint, Type
@@ -42,7 +42,6 @@ type Expression
     = LiteralExpr Literal
     | VariableExpr String
     | BranchExpr Branch
-    | ScopeExpr Scope
 
 
 {-| Literal values in the Pluraal language
@@ -150,9 +149,6 @@ evaluate context expr =
 
         BranchExpr branch ->
             evaluateBranch context branch
-
-        ScopeExpr scope ->
-            evaluateScope context scope
 
 
 {-| Evaluate a branching construct
