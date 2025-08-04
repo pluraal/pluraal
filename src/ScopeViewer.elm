@@ -50,7 +50,6 @@ init _ =
 
 type Msg
     = InputChanged String String
-    | EvaluateScope
     | ScopeLoaded (Result Http.Error Scope)
 
 
@@ -68,35 +67,19 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         InputChanged inputName value ->
-            ( { model | inputValues = Dict.insert inputName value model.inputValues }
-            , Cmd.none
-            )
-
-        EvaluateScope ->
-            case model.scope of
-                Nothing ->
-                    ( { model | evaluationResult = Just (Err "No scope loaded") }
-                    , Cmd.none
-                    )
-
-                Just scope ->
-                    let
-                        context = buildContext scope.inputs model.inputValues
-                        result = case context of
-                            Ok ctx -> Just (evaluateScope ctx scope)
-                            Err err -> Just (Err err)
-                    in
-                    ( { model | evaluationResult = result }
-                    , Cmd.none
-                    )
+            let
+                newModel = { model | inputValues = Dict.insert inputName value model.inputValues }
+            in
+            ( autoEvaluate newModel, Cmd.none )
 
         ScopeLoaded (Ok scope) ->
-            ( { model 
-              | scope = Just scope
-              , scopeLoadingState = LoadSuccess
-              }
-            , Cmd.none
-            )
+            let
+                newModel = { model 
+                           | scope = Just scope
+                           , scopeLoadingState = LoadSuccess
+                           }
+            in
+            ( autoEvaluate newModel, Cmd.none )
 
         ScopeLoaded (Err error) ->
             ( { model 
@@ -104,6 +87,24 @@ update msg model =
               }
             , Cmd.none
             )
+
+
+{-| Automatically evaluate the scope if possible
+-}
+autoEvaluate : Model -> Model
+autoEvaluate model =
+    case model.scope of
+        Nothing ->
+            { model | evaluationResult = Nothing }
+
+        Just scope ->
+            let
+                context = buildContext scope.inputs model.inputValues
+                result = case context of
+                    Ok ctx -> Just (evaluateScope ctx scope)
+                    Err err -> Just (Err err)
+            in
+            { model | evaluationResult = result }
 
 
 {-| Convert HTTP error to string
@@ -210,7 +211,6 @@ view model =
                         div [ class "scope-container" ]
                             [ viewScopeDefinition scope
                             , viewInputs scope.inputs model.inputValues
-                            , viewEvaluationButton
                             , viewResult model.evaluationResult
                             ]
         ]
@@ -277,20 +277,13 @@ viewInputField inputValues inputDef =
         ]
 
 
-viewEvaluationButton : Html Msg
-viewEvaluationButton =
-    div [ class "evaluation-section" ]
-        [ button [ onClick EvaluateScope ] [ text "Evaluate Scope" ]
-        ]
-
-
 viewResult : Maybe (Result String Expression) -> Html Msg
 viewResult maybeResult =
     div [ class "result-section" ]
         [ h2 [] [ text "Evaluation Result" ]
         , case maybeResult of
             Nothing ->
-                p [ class "no-result" ] [ text "Click 'Evaluate Scope' to see the result." ]
+                p [ class "no-result" ] [ text "Provide input values to see the result." ]
 
             Just (Ok expr) ->
                 div [ class "success-result" ]
