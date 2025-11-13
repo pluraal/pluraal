@@ -1,0 +1,12 @@
+{ "types":
+    { "Value":
+        { "OneOf":
+            { "If":
+                { "cond": { "Ref": "Boolean" }
+                , "then": { "Var": "a" }
+                , "else": { "Var": "a" }
+                }
+            }
+        }
+    }
+}

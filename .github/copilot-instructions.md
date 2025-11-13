@@ -1,5 +1,10 @@
 # Copilot Instructions for Pluraal
 
+When generating code or documentation for the Pluraal project, please follow these guidelines:
+
+- In agent mode, ask questions to clarify requirements or gather additional context before proceeding with code generation.
+- When a new piece of information is received from the developer, ensure it is incorporated into the relevant sections of the documentation, codebase or the `copilot-instructions.md`.
+
 ## Project Overview
 
 This is a dual-language project implementing a declarative language for rules and logic:
@@ -52,3 +57,9 @@ Follow the `OriginalModule.Codec` pattern for JSON serialization:
 - Use strict typing throughout
 - Follow separation of concerns (logic vs serialization)
 - Maintain comprehensive test coverage
+
+## UI Design Principles
+
+- **Real-time Evaluation**: The ScopeViewer UI automatically evaluates scopes when inputs change, providing immediate feedback without requiring manual action
+- **Responsive Interface**: UI should provide clear visual feedback for loading states, errors, and successful evaluations
+- **Type-safe Inputs**: Input validation should respect the Pluraal type system (String, Number, Boolean)

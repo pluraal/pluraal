@@ -1,20 +1,7 @@
 module Pluraal.Language exposing
-    ( Expression(..)
-    , Literal(..)
-    , Branch(..)
-    , Rule
-    , IfThenElse
-    , RuleChain
-    , FiniteBranch
-    , Scope
-    , Input
-    , DataPoint
-    , Type(..)
-    , evaluate
-    , evaluateRule
-    , evaluateRuleChain
-    , evaluateFiniteBranch
-    , evaluateScope
+    ( Expression(..), Literal(..), Branch(..), Rule, IfThenElse, RuleChain, FiniteBranch, Scope, Input, Type(..)
+    , evaluate, evaluateRule, evaluateRuleChain, evaluateFiniteBranch, evaluateScope, calculateDataPoints
+    , extractOutputs
     )
 
 {-| The Pluraal Language implementation in Elm.
@@ -22,15 +9,21 @@ module Pluraal.Language exposing
 This module provides types and functions for working with the Pluraal declarative language
 for defining rules and logic. Scope is now a separate top-level construct, not an expression type.
 
+
 # Core Types
-@docs Expression, Literal, Branch, Rule, IfThenElse, RuleChain, FiniteBranch, Scope, Input, DataPoint, Type
+
+@docs Expression, Literal, Branch, Rule, IfThenElse, RuleChain, FiniteBranch, Scope, Input, Type
+
 
 # Evaluation
-@docs evaluate, evaluateRule, evaluateRuleChain, evaluateFiniteBranch, evaluateScope
+
+@docs evaluate, evaluateRule, evaluateRuleChain, evaluateFiniteBranch, evaluateScope, calculateDataPoints
 
 -}
 
 import Dict exposing (Dict)
+import Set exposing (Set)
+
 
 
 -- TYPES
@@ -40,7 +33,7 @@ import Dict exposing (Dict)
 -}
 type Expression
     = LiteralExpr Literal
-    | VariableExpr String
+    | Reference String
     | BranchExpr Branch
 
 
@@ -50,7 +43,6 @@ type Literal
     = StringLiteral String
     | NumberLiteral Float
     | BoolLiteral Bool
-    | NullLiteral
 
 
 {-| Branching constructs for conditional logic
@@ -90,7 +82,7 @@ type alias RuleChain =
 -}
 type alias FiniteBranch =
     { branchOn : Expression
-    , cases : Dict String Expression
+    , cases : List ( Expression, Expression )
     , otherwise : Maybe Expression
     }
 
@@ -111,21 +103,14 @@ type alias Input =
     }
 
 
-{-| Data point calculated from inputs
--}
-type alias DataPoint =
-    { name : String
-    , expression : Expression
-    }
-
-
 {-| Scope with typed inputs and calculated data points
 -}
 type alias Scope =
     { inputs : List Input
-    , dataPoints : List DataPoint
-    , result : Expression
+    , calculations : Dict String Expression
+    , outputs : Set String
     }
+
 
 
 -- EVALUATION
@@ -139,7 +124,7 @@ evaluate context expr =
         LiteralExpr literal ->
             Ok (LiteralExpr literal)
 
-        VariableExpr name ->
+        Reference name ->
             case Dict.get name context of
                 Just value ->
                     evaluate context value
@@ -240,8 +225,9 @@ evaluateRulesHelper context rules otherwise =
 evaluateFiniteBranch : Dict String Expression -> FiniteBranch -> Result String Expression
 evaluateFiniteBranch context { branchOn, cases, otherwise } =
     case evaluate context branchOn of
-        Ok (LiteralExpr (StringLiteral key)) ->
-            case Dict.get key cases of
+        Ok switchValue ->
+            -- Find matching case by evaluating each case key
+            case findMatchingCase context switchValue cases of
                 Just expr ->
                     evaluate context expr
 
@@ -251,13 +237,98 @@ evaluateFiniteBranch context { branchOn, cases, otherwise } =
                             evaluate context defaultExpr
 
                         Nothing ->
-                            Err ("No case found for key: " ++ key)
-
-        Ok _ ->
-            Err "Branch expression must evaluate to a string"
+                            Err ("No case found for value: " ++ expressionToString switchValue)
 
         Err err ->
             Err err
+
+
+{-| Helper function to find a matching case by comparing evaluated expressions
+-}
+findMatchingCase : Dict String Expression -> Expression -> List ( Expression, Expression ) -> Maybe Expression
+findMatchingCase context switchValue cases =
+    case cases of
+        [] ->
+            Nothing
+
+        ( caseKey, caseExpr ) :: remainingCases ->
+            case evaluate context caseKey of
+                Ok evaluatedKey ->
+                    if expressionsEqual switchValue evaluatedKey then
+                        Just caseExpr
+
+                    else
+                        findMatchingCase context switchValue remainingCases
+
+                Err _ ->
+                    findMatchingCase context switchValue remainingCases
+
+
+{-| Check if two expressions are equal (for case matching)
+-}
+expressionsEqual : Expression -> Expression -> Bool
+expressionsEqual expr1 expr2 =
+    case ( expr1, expr2 ) of
+        ( LiteralExpr lit1, LiteralExpr lit2 ) ->
+            literalsEqual lit1 lit2
+
+        ( Reference name1, Reference name2 ) ->
+            name1 == name2
+
+        _ ->
+            False
+
+
+{-| Check if two literals are equal
+-}
+literalsEqual : Literal -> Literal -> Bool
+literalsEqual lit1 lit2 =
+    case ( lit1, lit2 ) of
+        ( StringLiteral str1, StringLiteral str2 ) ->
+            str1 == str2
+
+        ( NumberLiteral num1, NumberLiteral num2 ) ->
+            num1 == num2
+
+        ( BoolLiteral bool1, BoolLiteral bool2 ) ->
+            bool1 == bool2
+
+        _ ->
+            False
+
+
+{-| Convert expression to string for error messages
+-}
+expressionToString : Expression -> String
+expressionToString expr =
+    case expr of
+        LiteralExpr literal ->
+            literalToString literal
+
+        Reference name ->
+            name
+
+        BranchExpr _ ->
+            "branch"
+
+
+{-| Convert literal to string
+-}
+literalToString : Literal -> String
+literalToString literal =
+    case literal of
+        StringLiteral str ->
+            "\"" ++ str ++ "\""
+
+        NumberLiteral num ->
+            String.fromFloat num
+
+        BoolLiteral bool ->
+            if bool then
+                "true"
+
+            else
+                "false"
 
 
 {-| Validate that a literal value matches the expected type
@@ -280,8 +351,8 @@ validateType expectedType literal =
 
 {-| Evaluate a scope with type checking and data point calculation
 -}
-evaluateScope : Dict String Expression -> Scope -> Result String Expression
-evaluateScope context { inputs, dataPoints, result } =
+evaluateScope : Dict String Expression -> Scope -> Result String (Dict String Expression)
+evaluateScope context { inputs, calculations, outputs } =
     -- First, validate that all required inputs are present and have correct types
     case validateInputs context inputs of
         Err err ->
@@ -289,13 +360,31 @@ evaluateScope context { inputs, dataPoints, result } =
 
         Ok () ->
             -- Calculate data points in order, building up the context
-            case calculateDataPoints context dataPoints of
+            case calculateDataPoints context calculations of
                 Err err ->
                     Err err
 
                 Ok extendedContext ->
-                    -- Evaluate the result expression with the extended context
-                    evaluate extendedContext result
+                    -- Extract only the requested outputs
+                    Ok (extractOutputs extendedContext outputs)
+
+
+{-| Extract only the specified outputs from the extended context
+-}
+extractOutputs : Dict String Expression -> Set String -> Dict String Expression
+extractOutputs context outputNames =
+    Set.foldl
+        (\name acc ->
+            case Dict.get name context of
+                Just value ->
+                    Dict.insert name value acc
+
+                Nothing ->
+                    acc
+         -- Skip missing outputs (could log warning)
+        )
+        Dict.empty
+        outputNames
 
 
 {-| Validate that all inputs are present in context and have correct types
@@ -336,27 +425,35 @@ validateInputsHelper context inputs =
 
 {-| Calculate all data points and extend the context
 -}
-calculateDataPoints : Dict String Expression -> List DataPoint -> Result String (Dict String Expression)
+calculateDataPoints : Dict String Expression -> Dict String Expression -> Result String (Dict String Expression)
 calculateDataPoints context dataPoints =
-    calculateDataPointsHelper context context dataPoints
+    calculateDataPointsHelper context context dataPoints (Dict.keys dataPoints)
 
 
 {-| Helper function to calculate data points recursively
+Note: This processes data points in arbitrary order since Dict doesn't preserve order.
+For dependency-aware processing, we'd need topological sorting.
 -}
-calculateDataPointsHelper : Dict String Expression -> Dict String Expression -> List DataPoint -> Result String (Dict String Expression)
-calculateDataPointsHelper originalContext currentContext dataPoints =
-    case dataPoints of
+calculateDataPointsHelper : Dict String Expression -> Dict String Expression -> Dict String Expression -> List String -> Result String (Dict String Expression)
+calculateDataPointsHelper originalContext currentContext dataPoints remainingNames =
+    case remainingNames of
         [] ->
             Ok currentContext
 
-        dataPoint :: remainingDataPoints ->
-            case evaluate currentContext dataPoint.expression of
-                Ok value ->
-                    let
-                        extendedContext =
-                            Dict.insert dataPoint.name value currentContext
-                    in
-                    calculateDataPointsHelper originalContext extendedContext remainingDataPoints
+        name :: otherNames ->
+            case Dict.get name dataPoints of
+                Just expression ->
+                    case evaluate currentContext expression of
+                        Ok value ->
+                            let
+                                extendedContext =
+                                    Dict.insert name value currentContext
+                            in
+                            calculateDataPointsHelper originalContext extendedContext dataPoints otherNames
 
-                Err err ->
-                    Err ("Error calculating data point " ++ dataPoint.name ++ ": " ++ err)
+                        Err err ->
+                            Err ("Error calculating calculation " ++ name ++ ": " ++ err)
+
+                Nothing ->
+                    -- This shouldn't happen if remainingNames comes from Dict.keys dataPoints
+                    calculateDataPointsHelper originalContext currentContext dataPoints otherNames

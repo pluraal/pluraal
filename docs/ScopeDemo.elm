@@ -2,7 +2,7 @@ module ScopeDemo exposing (..)
 
 {-| Demonstration of the new Scope feature in Pluraal Language
 
-This module shows practical examples of using scopes with typed inputs and calculated data points.
+This module shows practical examples of using scopes with typed inputs and named calculations.
 -}
 
 import Dict exposing (Dict)
@@ -17,23 +17,23 @@ calculatorScope =
         [ { name = "x", type_ = NumberType }
         , { name = "y", type_ = NumberType }
         ]
-    , dataPoints =
-        [ { name = "sum", expression = 
-            BranchExpr (IfThenElseBranch 
-                { condition = LiteralExpr (BoolLiteral True)
-                , then_ = LiteralExpr (NumberLiteral 15) -- In practice would calculate x + y
-                , else_ = LiteralExpr (NumberLiteral 0)
-                })
-          }
-        , { name = "product", expression = 
-            BranchExpr (IfThenElseBranch 
-                { condition = LiteralExpr (BoolLiteral True)
-                , then_ = LiteralExpr (NumberLiteral 50) -- In practice would calculate x * y
-                , else_ = LiteralExpr (NumberLiteral 0)
-                })
-          }
-        ]
-    , result = VariableExpr "sum"
+        , calculations = Dict.fromList
+                [ ( "sum"
+                    , BranchExpr (IfThenElseBranch
+                                { condition = LiteralExpr (BoolLiteral True)
+                                , then_ = LiteralExpr (NumberLiteral 15) -- In practice would calculate x + y
+                                , else_ = LiteralExpr (NumberLiteral 0)
+                                })
+                    )
+                , ( "product"
+                    , BranchExpr (IfThenElseBranch
+                                { condition = LiteralExpr (BoolLiteral True)
+                                , then_ = LiteralExpr (NumberLiteral 50) -- In practice would calculate x * y
+                                , else_ = LiteralExpr (NumberLiteral 0)
+                                })
+                    )
+                ]
+    , result = Reference "sum"
     }
 
 
@@ -57,17 +57,17 @@ userProcessingScope =
         , { name = "age", type_ = NumberType }
         , { name = "isActive", type_ = BoolType }
         ]
-    , dataPoints =
-        [ { name = "fullName", expression = VariableExpr "firstName" } -- Simplified
-        , { name = "status", expression = 
-            BranchExpr (IfThenElseBranch 
-                { condition = VariableExpr "isActive"
-                , then_ = LiteralExpr (StringLiteral "active")
-                , else_ = LiteralExpr (StringLiteral "inactive")
-                })
-          }
-        ]
-    , result = VariableExpr "status"
+        , calculations = Dict.fromList
+            [ ( "fullName", Reference "firstName" ) -- Simplified
+                , ( "status"
+                    , BranchExpr (IfThenElseBranch
+                                { condition = Reference "isActive"
+                                , then_ = LiteralExpr (StringLiteral "active")
+                                , else_ = LiteralExpr (StringLiteral "inactive")
+                                })
+                    )
+                ]
+    , result = Reference "status"
     }
 
 
@@ -83,19 +83,19 @@ userContext =
         ]
 
 
-{-| Example 3: Chained data points scope
+{-| Example 3: Chained calculations scope
 -}
 chainedScope : Scope
 chainedScope =
     { inputs =
         [ { name = "base", type_ = NumberType }
         ]
-    , dataPoints =
-        [ { name = "doubled", expression = VariableExpr "base" }
-        , { name = "quadrupled", expression = VariableExpr "doubled" }
-        , { name = "final", expression = VariableExpr "quadrupled" }
+    , calculations = Dict.fromList
+    [ ( "doubled", Reference "base" )
+    , ( "quadrupled", Reference "doubled" )
+    , ( "final", Reference "quadrupled" )
         ]
-    , result = VariableExpr "final"
+    , result = Reference "final"
     }
 
 
@@ -112,7 +112,7 @@ runDemos : List (String, Result String Expression)
 runDemos =
     [ ( "Calculator", evaluate calculatorContext (ScopeExpr calculatorScope) )
     , ( "User Processing", evaluate userContext (ScopeExpr userProcessingScope) )
-    , ( "Chained Data Points", evaluate chainedContext (ScopeExpr chainedScope) )
+    , ( "Chained Calculations", evaluate chainedContext (ScopeExpr chainedScope) )
     ]
 
 
