@@ -1,13 +1,13 @@
 # Pluraal Scope Feature Examples
 
-The scope feature in Pluraal provides a powerful way to define typed inputs and calculated data points. This document provides comprehensive examples of how to use scopes.
+The scope feature in Pluraal provides a powerful way to define typed inputs and named calculations. This document provides comprehensive examples of how to use scopes.
 
 ## Basic Scope Structure
 
 A scope consists of three main parts:
 
 1. **Inputs**: Typed variables that must be provided
-2. **Data Points**: Calculated values derived from inputs and other data points  
+2. **Calculations**: Calculated values derived from inputs and other calculations  
 3. **Result**: The final expression to evaluate
 
 ## Example 1: Simple Calculator
@@ -19,17 +19,17 @@ inputs =
     , { name = "y", type_ = NumberType }
     ]
 
--- Define calculated data points
-dataPoints =
-    [ { name = "sum", expression = LiteralExpr (NumberLiteral 0) } -- simplified for example
-    , { name = "product", expression = LiteralExpr (NumberLiteral 0) } -- simplified for example
-    ]
+-- Define calculations (simplified static examples)
+calculations = Dict.fromList
+  [ ( "sum", LiteralExpr (NumberLiteral 0) )
+  , ( "product", LiteralExpr (NumberLiteral 0) )
+  ]
 
 -- Define the result
-result = VariableExpr "sum"
+result = Reference "sum"
 
 -- Create the scope
-calculatorScope = { inputs = inputs, dataPoints = dataPoints, result = result }
+calculatorScope = { inputs = inputs, calculations = calculations, result = result }
 scopeExpr = ScopeExpr calculatorScope
 
 -- Provide input context
@@ -53,46 +53,46 @@ inputs =
     , { name = "isActive", type_ = BoolType }
     ]
 
--- Define calculated data points
-dataPoints =
-    [ { name = "fullName", expression = VariableExpr "firstName" } -- In practice, would concatenate
-    , { name = "category", expression = 
-        BranchExpr (FiniteBranchBranch 
-            { branchOn = VariableExpr "isActive"
-            , cases = Dict.fromList 
-                [ ( "true", LiteralExpr (StringLiteral "active-user") )
-                , ( "false", LiteralExpr (StringLiteral "inactive-user") )
+-- Define calculations
+calculations = Dict.fromList
+  [ ( "fullName", Reference "firstName" ) -- In practice, would concatenate
+    , ( "category"
+      , BranchExpr (FiniteBranchBranch
+            { branchOn = Reference "isActive"
+            , cases = 
+                [ ( LiteralExpr (BoolLiteral True), LiteralExpr (StringLiteral "active-user") )
+                , ( LiteralExpr (BoolLiteral False), LiteralExpr (StringLiteral "inactive-user") )
                 ]
             , otherwise = Just (LiteralExpr (StringLiteral "unknown"))
             })
-      }
+      )
     ]
 
 -- Define the result - return the category
-result = VariableExpr "category"
+result = Reference "category"
 
 -- Create the scope
-userScope = { inputs = inputs, dataPoints = dataPoints, result = result }
+userScope = { inputs = inputs, calculations = calculations, result = result }
 ```
 
-## Example 3: Chained Data Points
+## Example 3: Chained Calculations
 
-Data points can reference other data points, allowing for complex calculations:
+Calculations can reference other calculations, allowing for complex logic:
 
 ```elm
 inputs = 
     [ { name = "baseValue", type_ = NumberType }
     ]
 
-dataPoints =
-    [ { name = "doubled", expression = VariableExpr "baseValue" }
-    , { name = "quadrupled", expression = VariableExpr "doubled" }  
-    , { name = "final", expression = VariableExpr "quadrupled" }
-    ]
+calculations = Dict.fromList
+  [ ( "doubled", Reference "baseValue" )
+  , ( "quadrupled", Reference "doubled" )  
+  , ( "final", Reference "quadrupled" )
+  ]
 
-result = VariableExpr "final"
+result = Reference "final"
 
-chainedScope = { inputs = inputs, dataPoints = dataPoints, result = result }
+chainedScope = { inputs = inputs, calculations = calculations, result = result }
 ```
 
 ## JSON Representation
@@ -107,23 +107,17 @@ Scopes can be serialized to JSON for storage or transmission:
     { "name": "age", "type": "number" },
     { "name": "isActive", "type": "bool" }
   ],
-  "dataPoints": [
-    { 
-      "name": "fullName", 
-      "expression": "firstName"
-    },
-    {
-      "name": "category",
-      "expression": {
-        "branchOn": "isActive",
-        "when": {
-          "true": "active-user",
-          "false": "inactive-user"
-        },
-        "otherwise": "unknown"
-      }
+  "calculations": {
+    "fullName": "firstName",
+    "category": {
+      "branchOn": "isActive",
+      "when": {
+        "true": "active-user",
+        "false": "inactive-user"
+      },
+      "otherwise": "unknown"
     }
-  ],
+  },
   "result": "category"
 }
 ```
@@ -144,12 +138,12 @@ Common errors when using scopes:
 
 1. **Missing Input**: "Required input not found: inputName"
 2. **Type Mismatch**: "Input inputName has incorrect type"
-3. **Data Point Error**: "Error calculating data point dataPointName: ..."
+3. **Calculation Error**: "Error calculating calculation calculationName: ..."
 
 ## Best Practices
 
 1. **Keep inputs minimal**: Only define inputs that are actually needed
-2. **Use descriptive names**: Choose clear names for inputs and data points
-3. **Chain data points logically**: Build complex calculations step by step
+2. **Use descriptive names**: Choose clear names for inputs and calculations
+3. **Chain calculations logically**: Build complex calculations step by step
 4. **Handle edge cases**: Use conditional logic to handle unexpected values
 5. **Validate early**: Put type-sensitive operations in data points rather than the result

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully implemented a new "scope" language feature for the Pluraal declarative language. A scope provides typed inputs and calculated data points for complex computations.
+Successfully implemented a new "scope" language feature for the Pluraal declarative language. A scope provides typed inputs and named calculations for complex computations.
 
 ## What Was Added
 
@@ -10,14 +10,14 @@ Successfully implemented a new "scope" language feature for the Pluraal declarat
 
 - **Type**: Type system supporting `StringType`, `NumberType`, and `BoolType`
 - **Input**: Named input with a specific type requirement
-- **DataPoint**: Named calculated value derived from inputs and other data points
-- **Scope**: Container with inputs, data points, and a result expression
+- **Calculation**: Named calculated value derived from inputs and other calculations
+- **Scope**: Container with inputs, calculations, and a result expression
 - **ScopeExpr**: New expression variant for scope evaluation
 
 ### 2. Evaluation Logic
 
 - **Type validation**: Ensures inputs match their declared types
-- **Sequential data point calculation**: Calculates data points in order, building up context
+- **Sequential calculation processing**: Calculates calculations in order, building up context
 - **Error handling**: Comprehensive error messages for missing inputs, type mismatches, and calculation errors
 
 ### 3. JSON Serialization (Codec.elm)
@@ -29,7 +29,7 @@ Successfully implemented a new "scope" language feature for the Pluraal declarat
 ### 4. Comprehensive Testing
 
 - **Basic scope evaluation**: Simple scopes with typed inputs
-- **Data point references**: Data points that reference inputs and other data points
+- **Calculation references**: Calculations that reference inputs and other calculations
 - **Error scenarios**: Missing inputs, type mismatches, calculation errors
 - **Chained calculations**: Multiple data points building on each other
 
@@ -44,13 +44,13 @@ inputs = [ { name = "age", type_ = NumberType } ]
 context = Dict.singleton "age" (LiteralExpr (StringLiteral "25"))
 ```
 
-### Calculated Data Points
+### Calculations
 ```elm
--- Data points can reference inputs and other data points
-dataPoints =
-    [ { name = "doubled", expression = VariableExpr "base" }
-    , { name = "quadrupled", expression = VariableExpr "doubled" }
-    ]
+-- Calculations can reference inputs and other calculations
+calculations =
+   [ { name = "doubled", expression = Reference "base" }
+   , { name = "quadrupled", expression = Reference "doubled" }
+   ]
 ```
 
 ### JSON Serialization
@@ -59,7 +59,7 @@ dataPoints =
   "inputs": [
     { "name": "radius", "type": "number" }
   ],
-  "dataPoints": [
+   "calculations": [
     { "name": "area", "expression": "..." }
   ],
   "result": "area"
@@ -102,21 +102,21 @@ dataPoints =
 ## Evaluation Flow
 
 1. **Input Validation**: Check all required inputs are present with correct types
-2. **Data Point Calculation**: Calculate each data point in order, extending the context
+2. **Calculations**: Evaluate each calculation in order, extending the context
 3. **Result Evaluation**: Evaluate the result expression with the fully extended context
 
 ## Error Handling
 
 The implementation provides clear error messages:
-- `"Required input not found: inputName"`
-- `"Input inputName has incorrect type"`  
-- `"Error calculating data point dataPointName: ..."`
+ `"Required input not found: inputName"`
+ `"Input inputName has incorrect type"`  
+ `"Error calculating calculation calculationName: ..."`
 
 ## Benefits
 
 1. **Type Safety**: Compile-time type checking for inputs
 2. **Modularity**: Reusable scopes with clear input/output contracts
-3. **Composability**: Data points can build on each other
+3. **Composability**: Calculations can build on each other
 4. **Serializable**: Full JSON support for persistence and transmission
 5. **Error Reporting**: Clear error messages for debugging
 
@@ -125,10 +125,10 @@ The implementation provides clear error messages:
 ```elm
 -- Define a scope
 scope = 
-    { inputs = [ { name = "x", type_ = NumberType } ]
-    , dataPoints = [ { name = "doubled", expression = VariableExpr "x" } ]
-    , result = VariableExpr "doubled"
-    }
+   { inputs = [ { name = "x", type_ = NumberType } ]
+   , calculations = Dict.fromList [ ( "doubled", Reference "x" ) ]
+   , result = Reference "doubled"
+   }
 
 -- Provide context
 context = Dict.singleton "x" (LiteralExpr (NumberLiteral 5))

@@ -3,7 +3,7 @@
 A visual interface for the Pluraal language that allows you to:
 
 1. **Load Scope Definitions**: Dynamically loads scope definitions from JSON files via HTTP
-2. **View Scope Structure**: See the structure of a scope including its inputs, data points, and result expression
+2. **View Scope Structure**: See the structure of a scope including its inputs, calculations, and result expression
 3. **Provide Input Values**: Enter values for the required inputs according to their types
 4. **Evaluate Scopes**: Execute the scope logic and see the results
 5. **Error Handling**: Get clear feedback when scopes fail to load, inputs are missing, or invalid
@@ -26,7 +26,7 @@ npx http-server
 
 ### JSON Scope Definition
 
-The application loads scope definitions from `sample-scope.json`. The JSON format uses explicit type discriminators to distinguish between literals, variables, and branches:
+The application loads scope definitions from `sample-scope.json`. The JSON format uses `{"ref": "name"}` for references and `{"type": ...}` objects for literals and branches:
 
 ```json
 {
@@ -36,39 +36,26 @@ The application loads scope definitions from `sample-scope.json`. The JSON forma
       "type": "string"
     }
   ],
-  "dataPoints": [
-    {
-      "name": "greeting",
-      "expression": {
-        "type": "branch",
-        "value": {
-          "if": {
-            "type": "variable",
-            "name": "isPremium"
-          },
-          "then": {
-            "type": "literal",
-            "value": "Welcome VIP!"
-          },
-          "else": {
-            "type": "literal",
-            "value": "Welcome!"
-          }
-        }
+  "calculations": {
+    "greeting": {
+      "type": "branch",
+      "value": {
+          "if": { "ref": "isPremium" },
+          "then": "Welcome VIP!",
+          "else": "Welcome!"
       }
     }
-  ],
+  },
   "result": {
-    "type": "variable",
-    "name": "greeting"
+  "ref": "greeting"
   }
 }
 ```
 
 **Expression Types:**
 
-- `{"type": "literal", "value": <json-value>}` - Literal values (strings, numbers, booleans, null)
-- `{"type": "variable", "name": "<variable-name>"}` - Variable references
+- `<json primitive>` - Literal values (string, number, boolean)
+- `{"ref": "<reference-name>"}` - Reference to previously defined input or calculation
 - `{"type": "branch", "value": <branch-object>}` - Branching logic (if-then-else, rules, finite branches)
 
 ## Sample Scope
@@ -80,7 +67,7 @@ The current demo includes a customer order processing scope with:
   - `orderAmount` (Number): Order total amount
   - `isPremium` (Boolean): Whether customer has premium status
 
-- **Data Points**:
+- **Calculations**:
   - `discount`: Calculates discount rate (15% for premium, 5% for standard)
   - `discountCategory`: Determines customer category based on premium status
   - `greeting`: Generates personalized greeting based on customer category
@@ -114,4 +101,4 @@ The UI demonstrates all the core Pluraal language features:
 - Rule chains with fallbacks
 - Finite branching with case matching
 - Type validation for inputs
-- Data point calculation and context building
+- Calculation evaluation and context building

@@ -1,92 +1,41 @@
 {
-  "inputs": [
-    {
-      "name": "customerName",
-      "type": "string"
-    },
-    {
-      "name": "orderAmount",
-      "type": "number"
-    },
-    {
-      "name": "isPremium",
-      "type": "bool"
-    }
-  ],
-  "dataPoints": [
-    {
-      "name": "discount",
-      "expression": {
-        "type": "branch",
-        "value": {
-          "if": {
-            "type": "variable",
-            "name": "isPremium"
-          },
-          "then": {
-            "type": "literal",
-            "value": 0.15
-          },
-          "else": {
-            "type": "literal",
-            "value": 0.05
-          }
-        }
+  "inputs": {
+    "Customer Name": "string",
+    "Order Amount": "number",
+    "Is Premium": "bool"
+  },
+  "calculations": {
+    "Discount": {
+      "type": "branch",
+      "value": {
+        "if": { "ref": "Is Premium" },
+        "then": 0.15,
+        "else": 0.05
       }
     },
-    {
-      "name": "discountCategory",
-      "expression": {
-        "type": "branch",
-        "value": {
-          "rules": [
-            {
-              "when": {
-                "type": "variable",
-                "name": "isPremium"
-              },
-              "then": {
-                "type": "literal",
-                "value": "premium"
-              }
-            }
-          ],
-          "otherwise": {
-            "type": "literal",
-            "value": "standard"
+    "Discount Category": {
+      "type": "branch",
+      "value": {
+        "rules": [
+          {
+            "when": { "ref": "Is Premium" },
+            "then": "premium"
           }
-        }
+        ],
+        "otherwise": "standard"
       }
     },
-    {
-      "name": "greeting",
-      "expression": {
-        "type": "branch",
-        "value": {
-          "branchOn": {
-            "type": "variable",
-            "name": "discountCategory"
-          },
-          "when": {
-            "premium": {
-              "type": "literal",
-              "value": "Thank you for being a Premium customer!"
-            },
-            "standard": {
-              "type": "literal",
-              "value": "Thank you for your order!"
-            }
-          },
-          "otherwise": {
-            "type": "literal",
-            "value": "Hello!"
-          }
-        }
+    "Greeting": {
+      "type": "branch",
+      "value": {
+        "branchOn": { "ref": "Discount Category" },
+        "when": [
+          ["premium", "Thank you for being a Premium customer!"],
+          ["standard", "Thank you for your order!"]
+        ],
+        "otherwise": "Hello!"
       }
     }
-  ],
-  "result": {
-    "type": "variable",
-    "name": "greeting"
-  }
+  },
+  "outputs": ["Greeting"]
 }

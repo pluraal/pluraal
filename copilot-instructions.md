@@ -1,4 +1,4 @@
-# Copilot Instructions for Pluraal MCP Server
+# Copilot Instructions for Pluraal
 
 This project is a TypeScript-based Model Context Protocol (MCP) server implementation. Here are the key development guidelines:
 
@@ -62,3 +62,4 @@ For more information about implementing MCP servers:
 - Always validate inputs with Zod schemas
 - Return results in the standard MCP content format
 - Handle async operations properly with try/catch blocks
+- Always use `npm run build:all` to verify correctness after changes

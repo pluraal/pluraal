@@ -45,7 +45,7 @@
 
 ### Scopes
 
-Scopes provide typed inputs and calculated data points for complex computations.
+Scopes provide typed inputs and named calculations for complex computations.
 
 #### Structure
 
@@ -54,8 +54,8 @@ Scopes provide typed inputs and calculated data points for complex computations.
   "inputs": [
     { "name": "inputName", "type": "string|number|bool" }
   ],
-  "dataPoints": [
-    { "name": "dataPointName", "expression": "expression" }
+  "calculations": {
+    "calculationName": "expression"
   ],
   "result": "expression"
 }
@@ -69,16 +69,13 @@ Scopes provide typed inputs and calculated data points for complex computations.
     { "name": "radius", "type": "number" },
     { "name": "pi", "type": "number" }
   ],
-  "dataPoints": [
-    { 
-      "name": "area", 
-      "expression": {
-        "if": true,
-        "then": 78.54,
-        "else": 0
-      }
+  "calculations": {
+    "area": {
+      "if": true,
+      "then": 78.54,
+      "else": 0
     }
-  ],
+  },
   "result": "area"
 }
 ```
@@ -92,7 +89,7 @@ Scopes provide typed inputs and calculated data points for complex computations.
 #### Evaluation Order
 
 1. Validate all inputs are present and have correct types
-2. Calculate data points in order (each can reference previous data points)
+2. Evaluate calculations (each can reference previous calculations)
 3. Evaluate the result expression with the extended context
 
 ## Types

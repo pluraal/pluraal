@@ -1,20 +1,11 @@
 module Pluraal.Language.Codec exposing
-    ( encodeExpression
-    , decodeExpression
-    , encodeLiteral
-    , decodeLiteral
-    , encodeBranch
-    , decodeBranch
-    , encodeRule
-    , decodeRule
-    , encodeScope
-    , decodeScope
-    , encodeType
-    , decodeType
-    , encodeInput
-    , decodeInput
-    , encodeDataPoint
-    , decodeDataPoint
+    ( encodeExpression, decodeExpression
+    , encodeLiteral, decodeLiteral
+    , encodeBranch, decodeBranch
+    , encodeRule, decodeRule
+    , encodeScope, decodeScope
+    , encodeType, decodeType
+    , encodeInput, decodeInput
     )
 
 {-| JSON encoding and decoding for the Pluraal Language.
@@ -22,36 +13,54 @@ module Pluraal.Language.Codec exposing
 This module provides functions for serializing and deserializing Pluraal language
 constructs to and from JSON format.
 
+
 # Expression Encoding/Decoding
+
 @docs encodeExpression, decodeExpression
 
+
 # Literal Encoding/Decoding
+
 @docs encodeLiteral, decodeLiteral
 
+
 # Branch Encoding/Decoding
+
 @docs encodeBranch, decodeBranch
 
+
 # Rule Encoding/Decoding
+
 @docs encodeRule, decodeRule
 
+
 # Scope Encoding/Decoding
+
 @docs encodeScope, decodeScope
 
+
 # Type System Encoding/Decoding
+
 @docs encodeType, decodeType
 
+
 # Input Encoding/Decoding
+
 @docs encodeInput, decodeInput
 
+
 # DataPoint Encoding/Decoding
+
 @docs encodeDataPoint, decodeDataPoint
 
 -}
 
-import Dict
+import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Pluraal.Language exposing (..)
+import Set exposing (Set)
+
 
 
 -- ENCODING
@@ -63,16 +72,10 @@ encodeExpression : Expression -> Value
 encodeExpression expr =
     case expr of
         LiteralExpr literal ->
-            Encode.object
-                [ ( "type", Encode.string "literal" )
-                , ( "value", encodeLiteral literal )
-                ]
+            encodeLiteral literal
 
-        VariableExpr name ->
-            Encode.object
-                [ ( "type", Encode.string "variable" )
-                , ( "name", Encode.string name )
-                ]
+        Reference name ->
+            Encode.object [ ( "ref", Encode.string name ) ]
 
         BranchExpr branch ->
             Encode.object
@@ -94,9 +97,6 @@ encodeLiteral literal =
 
         BoolLiteral bool ->
             Encode.bool bool
-
-        NullLiteral ->
-            Encode.null
 
 
 {-| Encode a branch to JSON
@@ -132,9 +132,9 @@ encodeBranch branch =
         FiniteBranchBranch { branchOn, cases, otherwise } ->
             let
                 encodedCases =
-                    Dict.toList cases
-                        |> List.map (\( k, v ) -> ( k, encodeExpression v ))
-                        |> Encode.object
+                    cases
+                        |> List.map (\( k, v ) -> Encode.list identity [ encodeExpression k, encodeExpression v ])
+                        |> Encode.list identity
 
                 baseObject =
                     [ ( "branchOn", encodeExpression branchOn )
@@ -165,12 +165,31 @@ encodeRule { when, then_ } =
 {-| Encode a scope to JSON
 -}
 encodeScope : Scope -> Value
-encodeScope { inputs, dataPoints, result } =
+encodeScope { inputs, calculations, outputs } =
     Encode.object
-        [ ( "inputs", Encode.list encodeInput inputs )
-        , ( "dataPoints", Encode.list encodeDataPoint dataPoints )
-        , ( "result", encodeExpression result )
+        [ ( "inputs", encodeInputsObject inputs )
+        , ( "calculations", encodeCalculationsObject calculations )
+        , ( "outputs", Encode.list Encode.string (Set.toList outputs) )
         ]
+
+
+{-| Encode inputs as an object keyed by name with type string values
+-}
+encodeInputsObject : List Input -> Value
+encodeInputsObject inputs =
+    inputs
+        |> List.map (\inp -> ( inp.name, encodeType inp.type_ ))
+        |> Encode.object
+
+
+{-| Encode data points as an object keyed by name with expression values
+-}
+encodeCalculationsObject : Dict String Expression -> Value
+encodeCalculationsObject dataPoints =
+    dataPoints
+        |> Dict.toList
+        |> List.map (\( name, expression ) -> ( name, encodeExpression expression ))
+        |> Encode.object
 
 
 {-| Encode a type to JSON
@@ -198,15 +217,6 @@ encodeInput { name, type_ } =
         ]
 
 
-{-| Encode a data point to JSON
--}
-encodeDataPoint : DataPoint -> Value
-encodeDataPoint { name, expression } =
-    Encode.object
-        [ ( "name", Encode.string name )
-        , ( "expression", encodeExpression expression )
-        ]
-
 
 -- DECODING
 
@@ -215,22 +225,27 @@ encodeDataPoint { name, expression } =
 -}
 decodeExpression : Decoder Expression
 decodeExpression =
-    Decode.field "type" Decode.string
-        |> Decode.andThen
-            (\typeStr ->
-                case typeStr of
-                    "literal" ->
-                        Decode.map LiteralExpr (Decode.field "value" decodeLiteral)
+    let
+        refDecoder =
+            Decode.field "ref" Decode.string |> Decode.map Reference
 
-                    "variable" ->
-                        Decode.map VariableExpr (Decode.field "name" Decode.string)
+        branchDecoder =
+            Decode.field "type" Decode.string
+                |> Decode.andThen
+                    (\typeStr ->
+                        case typeStr of
+                            "branch" ->
+                                Decode.map BranchExpr (Decode.field "value" (Decode.lazy (\_ -> decodeBranch)))
 
-                    "branch" ->
-                        Decode.map BranchExpr (Decode.field "value" (Decode.lazy (\_ -> decodeBranch)))
+                            _ ->
+                                Decode.fail "Not a branch"
+                    )
 
-                    _ ->
-                        Decode.fail ("Unknown expression type: " ++ typeStr)
-            )
+        -- New compact literal form: bare JSON primitive (string / number / bool)
+        primitiveLiteralDecoder =
+            Decode.map LiteralExpr decodeLiteral
+    in
+    Decode.oneOf [ primitiveLiteralDecoder, refDecoder, branchDecoder ]
 
 
 {-| Decode a literal from JSON
@@ -241,7 +256,6 @@ decodeLiteral =
         [ Decode.map StringLiteral Decode.string
         , Decode.map NumberLiteral Decode.float
         , Decode.map BoolLiteral Decode.bool
-        , Decode.null NullLiteral
         ]
 
 
@@ -290,18 +304,69 @@ decodeFiniteBranch : Decoder Branch
 decodeFiniteBranch =
     Decode.map3 (\branchOn cases otherwise -> FiniteBranchBranch { branchOn = branchOn, cases = cases, otherwise = otherwise })
         (Decode.field "branchOn" (Decode.lazy (\_ -> decodeExpression)))
-        (Decode.field "when" (Decode.dict (Decode.lazy (\_ -> decodeExpression))))
+        (Decode.field "when" decodeExpressionPairs)
         (Decode.maybe (Decode.field "otherwise" (Decode.lazy (\_ -> decodeExpression))))
+
+
+{-| Decode a list of (Expression, Expression) pairs from a list of [key, value] pairs
+-}
+decodeExpressionPairs : Decoder (List ( Expression, Expression ))
+decodeExpressionPairs =
+    Decode.list (Decode.list (Decode.lazy (\_ -> decodeExpression)))
+        |> Decode.andThen
+            (\pairs ->
+                case convertPairsList pairs of
+                    Ok pairsList ->
+                        Decode.succeed pairsList
+
+                    Err error ->
+                        Decode.fail error
+            )
+
+
+{-| Convert list of [key, value] lists to list of (key, value) tuples
+-}
+convertPairsList : List (List Expression) -> Result String (List ( Expression, Expression ))
+convertPairsList pairs =
+    case pairs of
+        [] ->
+            Ok []
+
+        [ key, value ] :: remainingPairs ->
+            case convertPairsList remainingPairs of
+                Ok remainingTuples ->
+                    Ok (( key, value ) :: remainingTuples)
+
+                Err error ->
+                    Err error
+
+        _ :: _ ->
+            Err "Invalid case format: each case must be a [key, value] pair"
 
 
 {-| Decode a scope from JSON
 -}
 decodeScope : Decoder Scope
 decodeScope =
-    Decode.map3 (\inputs dataPoints result -> { inputs = inputs, dataPoints = dataPoints, result = result })
-        (Decode.field "inputs" (Decode.list (Decode.lazy (\_ -> decodeInput))))
-        (Decode.field "dataPoints" (Decode.list (Decode.lazy (\_ -> decodeDataPoint))))
-        (Decode.field "result" (Decode.lazy (\_ -> decodeExpression)))
+    Decode.map3 (\inputs calculations outputs -> { inputs = inputs, calculations = calculations, outputs = outputs })
+        (Decode.field "inputs" decodeInputsObject)
+        (Decode.field "calculations" decodeDataPointsObject)
+        (Decode.field "outputs" (Decode.list Decode.string |> Decode.map Set.fromList))
+
+
+{-| Decode inputs from an object keyed by name to type
+-}
+decodeInputsObject : Decoder (List Input)
+decodeInputsObject =
+    Decode.dict (Decode.lazy (\_ -> decodeType))
+        |> Decode.map (\d -> d |> Dict.toList |> List.map (\( name, type_ ) -> { name = name, type_ = type_ }))
+
+
+{-| Decode data points from an object keyed by name to expression
+-}
+decodeDataPointsObject : Decoder (Dict String Expression)
+decodeDataPointsObject =
+    Decode.dict (Decode.lazy (\_ -> decodeExpression))
 
 
 {-| Decode a type from JSON
@@ -333,12 +398,3 @@ decodeInput =
     Decode.map2 (\name type_ -> { name = name, type_ = type_ })
         (Decode.field "name" Decode.string)
         (Decode.field "type" (Decode.lazy (\_ -> decodeType)))
-
-
-{-| Decode a data point from JSON
--}
-decodeDataPoint : Decoder DataPoint
-decodeDataPoint =
-    Decode.map2 (\name expression -> { name = name, expression = expression })
-        (Decode.field "name" Decode.string)
-        (Decode.field "expression" (Decode.lazy (\_ -> decodeExpression)))
