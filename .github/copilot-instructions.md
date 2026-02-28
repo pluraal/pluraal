@@ -1,65 +1,62 @@
-# Copilot Instructions for Pluraal
+# Copilot Instructions
 
-When generating code or documentation for the Pluraal project, please follow these guidelines:
+These instructions guide contributions to the Pluraal language specification.
 
-- In agent mode, ask questions to clarify requirements or gather additional context before proceeding with code generation.
-- When a new piece of information is received from the developer, ensure it is incorporated into the relevant sections of the documentation, codebase or the `copilot-instructions.md`.
+## Specification Structure
 
-## Project Overview
+- All specification files live under `specs/`.
+- `specs/vision.md` describes the high-level vision. Do not repeat its content elsewhere.
+- `specs/language.md` provides a high-level index of all language modules. Update it when adding or renaming modules.
+- Language modules live under `specs/language/`. Each module is a single markdown file covering one type or type class.
 
-This is a dual-language project implementing a declarative language for rules and logic:
+## File Naming
 
-- **TypeScript**: MCP (Model Context Protocol) server implementation
-- **Elm**: Core language library with type-safe evaluation
+- Use lowercase for single-word module names (e.g., `boolean.md`, `number.md`).
+- Use dash-separated lowercase for multi-word names (e.g., `ordering-relation.md`).
 
-The language design separates `Scope` as a top-level construct (not an expression type), allowing for clear separation between expressions and scope evaluation.
+## Module Types
 
-## Architecture Patterns
+### Types
 
-### Module Organization
+Describe a concrete data type. Structure:
 
-Follow the `OriginalModule.Codec` pattern for JSON serialization:
+1. **Overview** — what the type represents.
+2. **Member Values** — each value with a one-line description.
+3. **Type Class Instances** — which type classes this type implements, with links.
 
-- Keep core logic in the main module (e.g., `Pluraal.Language`)
-- Move JSON encoding/decoding to a separate `.Codec` module (e.g., `Pluraal.Language.Codec`)
-- Always update `elm.json` exposed-modules when adding new public modules
+### Type Classes
 
-### Elm Naming Conventions
+Describe a shared interface analogous to Haskell type classes, without type theory. Structure:
 
-- Use descriptive constructor names to avoid conflicts with type aliases
-- Examples: `IfThenElseBranch` instead of `IfThenElse` for constructors
-- Use `Decode.lazy` for recursive type decoders to handle cyclic dependencies
+1. **Overview** — what the type class abstracts; list any extended type classes with links.
+2. **Operations** — one subsection per operation (see below).
 
-### Elm Dependency Management
+## Operations
 
-- Use `elm install <package>` to add new Elm dependencies instead of manually editing `elm.json`
-- This ensures proper version resolution and constraint handling
-- Only edit `elm.json` manually for exposed-modules when creating new public modules
-- Let Elm's package manager handle dependency versions and compatibility
+- Every operation gets its own `###` subsection, even if it results in more content.
+- Mark each operation as _Required_ or _Derived_.
+- Derived operations must reference the required operation(s) they are defined in terms of.
+- Each operation section includes a truth table or example table that provides full-coverage test cases.
+- All operations that return a truth value must declare [Boolean](../specs/language/boolean.md) as the return type.
 
-### Testing Requirements
+## Cross-References
 
-- All TypeScript changes must maintain existing tests (Vitest)
-- All Elm changes must maintain existing tests (elm-test)
-- Run tests after any refactoring to ensure functionality is preserved
+- Always use relative markdown links when referencing other modules (e.g., `[Boolean](boolean.md)`).
+- Use anchor links when referencing a specific section within a module (e.g., `[Less](ordering-relation.md#less)`).
 
-## Development Workflow
+## Content Guidelines
 
-1. Make changes to core logic
-2. Update or create corresponding `.Codec` modules for JSON serialization
-3. Update `elm.json` exposed-modules if adding new public modules
-4. Run tests to verify changes
-5. Update documentation as needed
+- Describe semantics only. Do not include language syntax.
+- Be succinct without losing accuracy.
+- Preconditions (e.g., non-zero divisor) must be stated explicitly in the operation description.
+- Algebraic laws (e.g., identity, inverse) should be stated where they clarify the operation's meaning.
 
-## Common Patterns
+## Markdown Validation
 
-- Use Zod for TypeScript validation
-- Use strict typing throughout
-- Follow separation of concerns (logic vs serialization)
-- Maintain comprehensive test coverage
+After editing any markdown file, always run the lint scripts to verify correctness:
 
-## UI Design Principles
+- `npm run lint:md` — checks formatting rules via markdownlint.
+- `npm run lint:links` — checks that all internal links and anchors resolve.
+- `npm run lint` — runs both checks in sequence.
 
-- **Real-time Evaluation**: The ScopeViewer UI automatically evaluates scopes when inputs change, providing immediate feedback without requiring manual action
-- **Responsive Interface**: UI should provide clear visual feedback for loading states, errors, and successful evaluations
-- **Type-safe Inputs**: Input validation should respect the Pluraal type system (String, Number, Boolean)
+Fix any errors reported before considering the edit complete.
