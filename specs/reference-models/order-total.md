@@ -24,7 +24,7 @@ Gross cost before discount or tax.
 | `unit_price` | `quantity` | `subtotal` |
 | ------------ | ---------- | ---------- |
 | 10           | 3          | 30         |
-| 25           | 2          | 50         |
+| 25           | 2          | 51         |
 | 5            | 1          | 5          |
 | 0            | 5          | 0          |
 
