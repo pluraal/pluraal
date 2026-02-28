@@ -1,0 +1,15 @@
+{
+  "name": "pluraal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
+    "lint:links": "remark --frail .",
+    "lint": "npm run lint:md && npm run lint:links"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.17.2",
+    "remark-cli": "^12.0.1",
+    "remark-validate-links": "^13.0.1"
+  }
+}
