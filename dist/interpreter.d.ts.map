@@ -1,0 +1,1 @@
+{"version":3,"file":"interpreter.d.ts","sourceRoot":"","sources":["../src/interpreter.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAQ,KAAK,EAAE,UAAU,EAAE,MAAM,YAAY,CAAC;AAE1D,qBAAa,WAAW;IACtB,OAAO,CAAC,QAAQ,CAAC,MAAM,CAAa;gBAExB,MAAM,EAAE,UAAU;IAI9B;;;;OAIG;IACH,QAAQ,CAAC,cAAc,EAAE,MAAM,EAAE,MAAM,EAAE,MAAM,CAAC,MAAM,EAAE,KAAK,CAAC,GAAG,KAAK;CAWvE"}

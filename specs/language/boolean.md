@@ -11,20 +11,22 @@ The Boolean type represents a fundamental data type with two distinct member val
 
 ## Operations
 
-Each operation is described with its truth table, which serves as both a specification and a full-coverage test suite.
-
-### NOT (Negation)
+### NOT
 
 Inverts the value of a Boolean.
+
+#### Test cases
 
 | Input | Output |
 | ----- | ------ |
 | true  | false  |
 | false | true   |
 
-### AND (Conjunction)
+### AND
 
 Returns true if and only if both inputs are true.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -33,9 +35,11 @@ Returns true if and only if both inputs are true.
 | false   | true    | false  |
 | false   | false   | false  |
 
-### OR (Disjunction)
+### OR
 
 Returns true if at least one input is true.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -44,9 +48,11 @@ Returns true if at least one input is true.
 | false   | true    | true   |
 | false   | false   | false  |
 
-### XOR (Exclusive OR)
+### XOR
 
 Returns true if exactly one input is true.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -55,9 +61,11 @@ Returns true if exactly one input is true.
 | false   | true    | true   |
 | false   | false   | false  |
 
-### IMPLIES (Material Implication)
+### IMPLIES
 
 Returns false only when the antecedent is true and the consequent is false.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |

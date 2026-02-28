@@ -12,15 +12,19 @@ Relational operations return a [Boolean](boolean.md) value.
 
 _[Required](../language.md#required)._ Returns an [Ordering Relation](ordering-relation.md) representing the relationship between the first and second value. All other ordering operations are derived from this.
 
+#### Test cases
+
 | Input A | Input B | Output                                  |
 | ------- | ------- | --------------------------------------- |
 | 1       | 2       | [Less](ordering-relation.md#less)       |
 | 2       | 2       | [Equal](ordering-relation.md#equal)     |
 | 3       | 2       | [Greater](ordering-relation.md#greater) |
 
-### Less Than (<)
+### Less Than
 
 _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is [Less](ordering-relation.md#less).
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -28,9 +32,11 @@ _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is [Less]
 | 2       | 2       | false  |
 | 3       | 2       | false  |
 
-### Greater Than (>)
+### Greater Than
 
 _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is [Greater](ordering-relation.md#greater).
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -38,9 +44,11 @@ _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is [Great
 | 2       | 2       | false  |
 | 3       | 2       | true   |
 
-### Less Than or Equal (<=)
+### Less Than or Equal
 
 _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is not [Greater](ordering-relation.md#greater).
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -48,9 +56,11 @@ _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is not [G
 | 2       | 2       | true   |
 | 3       | 2       | false  |
 
-### Greater Than or Equal (>=)
+### Greater Than or Equal
 
 _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is not [Less](ordering-relation.md#less).
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |

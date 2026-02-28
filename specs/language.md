@@ -1,21 +1,31 @@
-# Language Specification Layout
+# Language Specification
 
 This specification organizes the language into modular, human-readable markdown files. Each module describes a distinct aspect of the language, focusing on clarity and traceability.
 
-## Structure
+## Modules
 
-- **language.md**: High-level overview and layout of the language specification.
-- **language/boolean.md**: Defines the Boolean type, its member values (true, false), and core Boolean operations with truth tables.
-- **language/ordering-relation.md**: Defines the Ordering Relation type, representing the outcome of a comparison: Less, Equal, or Greater.
-- **language/equality.md**: Describes the Equality type class, covering equality and inequality operations.
-- **language/ordering.md**: Specifies the Ordering type class, covering relational operations for types with order using Ordering Relation as the compare result.
-- **language/number.md**: Details the Number type class, including arithmetic operations for numeric types.
+### Types
 
-## Principles
+Concrete data types with named member values.
 
-- Each module is self-contained and focused on a single concept or type class.
-- Operations are described in terms of their semantics and testable truth tables, not language-specific syntax.
-- The layout supports extension with additional types, type classes, or domain-specific modules as needed.
+- [Boolean](language/boolean.md) — a two-valued type representing truth: `true` and `false`.
+- [Ordering Relation](language/ordering-relation.md) — a three-valued type representing the outcome of a comparison: `Less`, `Equal`, or `Greater`.
+
+### Type Classes
+
+Shared interfaces that define operations over types. A type _instances_ a type class by implementing its [Required](#required) operations.
+
+- [Equality](language/equality.md) — equality and inequality comparison.
+- [Ordering](language/ordering.md) — relative ordering via a three-way [compare](language/ordering.md#compare) operation.
+- [Number](language/number.md) — arithmetic operations for numeric types.
+
+## Operations
+
+Each operation in a type class module has its own `###` subsection containing:
+
+- A [Required](#required) or [Derived](#derived) marker.
+- A description of the operation's semantics.
+- A `#### Test cases` subsection with a table of inputs and expected outputs providing full-coverage test cases.
 
 ## Operation Markers
 
@@ -29,4 +39,23 @@ The operation must be implemented by any type that instances the type class. It 
 
 The operation has a default definition expressed in terms of one or more [Required](#required) operations. A type instancing the type class inherits this definition and does not need to implement it separately, though it may override it.
 
-This structure enables spec-driven development, clear documentation, and systematic verification of language features.
+## User Modules
+
+User modules are markdown files that describe business logic using the language's building blocks. Business logic is expressed as nested lists:
+
+- The parent item is a reference to an operation (linked to its definition in a type class module).
+- Each child item is an argument passed to that operation, which may itself be a nested operation call.
+
+This mirrors function application in a readable, non-syntactic form.
+
+### Example
+
+- [Add](language/number.md#addition)
+  - [Multiply](language/number.md#multiplication)
+    - `unit_price`
+    - `quantity`
+  - `tax`
+
+This reads as: add the result of multiplying `unit_price` by `quantity` to `tax`.
+
+Leaf values (e.g., `unit_price`) refer to named inputs or constants defined elsewhere in the user module. Any operation that returns a [Boolean](language/boolean.md) can be used as a condition in control-flow constructs.

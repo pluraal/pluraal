@@ -16,4 +16,22 @@ jobs:
 
       - run: npm ci
 
+      - run: npm run build
+
       - run: npm run lint
+
+      - name: Generate reference model test reports
+        run: |
+          mkdir -p test-reports
+          for file in specs/reference-models/*.md; do
+            name=$(basename "$file" .md)
+            node dist/cli.js test "$file" --reporter junit --output "test-reports/${name}.xml" || true
+          done
+
+      - name: Test Reporter
+        uses: dorny/test-reporter@v2.5.0
+        if: ${{ !cancelled() }}       # run this step even if previous step failed
+        with:
+          name: Reference Model Tests # Name of the check run which will be created
+          path: test-reports/*.xml    # Path to test results
+          reporter: java-junit        # Format of test results        

@@ -8,9 +8,11 @@ The Equality type class defines operations for comparing values to determine if 
 
 All operations return a [Boolean](boolean.md) value.
 
-### Equal (==)
+### Equal
 
 _[Required](../language.md#required)._ Returns true if both values are the same. Must be implemented by any type that instances this type class.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -19,9 +21,11 @@ _[Required](../language.md#required)._ Returns true if both values are the same.
 | false   | true    | false  |
 | false   | false   | true   |
 
-### Not Equal (!=)
+### Not Equal
 
-_[Derived](../language.md#derived)._ Returns true if values are different. Defined as [NOT](boolean.md#not-negation)`(a == b)`; does not need to be separately implemented.
+_[Derived](../language.md#derived)._ Returns true if values are different. Defined as [NOT](boolean.md#not)`(a == b)`; does not need to be separately implemented.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |

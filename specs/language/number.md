@@ -6,9 +6,11 @@ The Number type class defines operations for numeric types, supporting arithmeti
 
 ## Operations
 
-### Addition (+)
+### Addition
 
 Returns the sum of two numbers.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -16,9 +18,11 @@ Returns the sum of two numbers.
 | -1      | 1       | 0      |
 | 0       | 0       | 0      |
 
-### Subtraction (-)
+### Subtraction
 
 Returns the difference of two numbers.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -26,9 +30,11 @@ Returns the difference of two numbers.
 | 1       | 1       | 0      |
 | 0       | 3       | -3     |
 
-### Multiplication (\*)
+### Multiplication
 
 Returns the product of two numbers.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -36,9 +42,11 @@ Returns the product of two numbers.
 | -2      | 3       | -6     |
 | 0       | 5       | 0      |
 
-### Division (/)
+### Division
 
 Returns the quotient of two numbers. Precondition: divisor must not be zero; the result is undefined otherwise.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
@@ -46,9 +54,11 @@ Returns the quotient of two numbers. Precondition: divisor must not be zero; the
 | 7       | 2       | 3.5    |
 | 0       | 5       | 0      |
 
-### Negation (negate)
+### Negation
 
 Returns the additive inverse of a number such that `a + negate(a) == 0`.
+
+#### Test cases
 
 | Input | Output |
 | ----- | ------ |
@@ -56,9 +66,11 @@ Returns the additive inverse of a number such that `a + negate(a) == 0`.
 | -3    | 3      |
 | 0     | 0      |
 
-### Absolute Value (abs)
+### Absolute Value
 
-Returns the non-negative magnitude of a number. Equal to the number itself when non-negative, and its [negation](#negation-negate) otherwise.
+Returns the non-negative magnitude of a number. Equal to the number itself when non-negative, and its [negation](#negation) otherwise.
+
+#### Test cases
 
 | Input | Output |
 | ----- | ------ |
@@ -66,9 +78,11 @@ Returns the non-negative magnitude of a number. Equal to the number itself when 
 | -3    | 3      |
 | 0     | 0      |
 
-### Modulus (mod)
+### Modulus
 
 Returns the remainder after dividing the first number by the second. Precondition: divisor must not be zero.
+
+#### Test cases
 
 | Input A | Input B | Output |
 | ------- | ------- | ------ |
