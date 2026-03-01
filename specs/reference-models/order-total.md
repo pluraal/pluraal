@@ -131,3 +131,21 @@ Returns [true](../language/boolean.md) when `discount_rate` does not exceed `1`.
 | 0.5             | true                |
 | 1               | true                |
 | 1.5             | false               |
+
+### `clamped_discount_rate`
+
+Returns `discount_rate` when `is_valid_discount` is [true](../language/boolean.md), otherwise `0`.
+
+- [If-Then-Else](../language/boolean.md#if-then-else)
+  - `is_valid_discount`
+  - `discount_rate`
+  - `0`
+
+#### Test cases
+
+| `is_valid_discount` | `discount_rate` | `clamped_discount_rate` |
+| ------------------- | --------------- | ----------------------- |
+| true                | 0.1             | 0.1                     |
+| true                | 0.5             | 0.5                     |
+| false               | 1.5             | 0                       |
+| false               | 2               | 0                       |

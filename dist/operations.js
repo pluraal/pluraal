@@ -23,6 +23,8 @@ export const OPERATIONS = {
     // Equality type class
     equals: (a, b) => a === b,
     "not-equals": (a, b) => a !== b,
+    // Control flow
+    "if-then-else": (cond, then_, else_) => cond ? then_ : else_,
 };
 /**
  * Extracts the operation key from a markdown link URL.

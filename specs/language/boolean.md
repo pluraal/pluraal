@@ -74,6 +74,17 @@ Returns false only when the antecedent is true and the consequent is false.
 | false   | true    | true   |
 | false   | false   | true   |
 
+### If-Then-Else
+
+Evaluates to the then-value when the condition is `true`, and to the else-value when the condition is `false`. The condition must be a Boolean.
+
+#### Test cases
+
+| Condition | Then | Else | Output |
+| --------- | ---- | ---- | ------ |
+| true      | 1    | 2    | 1      |
+| false     | 1    | 2    | 2      |
+
 ## Type Class Instances
 
 Boolean implements [Equality](equality.md): two Boolean values are equal when they are the same member.
