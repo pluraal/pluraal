@@ -58,4 +58,4 @@ This mirrors function application in a readable, non-syntactic form.
 
 This reads as: add the result of multiplying `unit_price` by `quantity` to `tax`.
 
-Leaf values (e.g., `unit_price`) refer to named inputs or constants defined elsewhere in the user module. Any operation that returns a [Boolean](language/boolean.md) can be used as a condition in control-flow constructs.
+Leaf values (e.g., `unit_price`) refer to named inputs or constants defined elsewhere in the user module. A [Boolean](language/boolean.md) value can be used as a condition in the [If-Then-Else](language/boolean.md#if-then-else) control-flow construct.

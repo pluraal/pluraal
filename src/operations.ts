@@ -30,6 +30,9 @@ export const OPERATIONS: Record<string, Op> = {
   // Equality type class
   equals: (a, b) => a === b,
   "not-equals": (a, b) => a !== b,
+
+  // Control flow
+  "if-then-else": (cond, then_, else_) => (cond as boolean) ? then_ : else_,
 };
 
 /**
