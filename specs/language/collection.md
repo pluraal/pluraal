@@ -2,39 +2,36 @@
 
 ## Overview
 
-A Collection is a parameterized type that holds zero or more elements of a given element type `T`. Collections are characterized by four type attributes:
+A Collection is a parametric type over an element type `T` that holds zero or more elements. Collections are characterized by four attributes:
 
-- **multiplicity** — governs whether duplicate elements are permitted.
-- **iteration order** — governs the sequence in which elements are visited during iteration.
-- **minimum cardinality** — the minimum number of elements the collection must contain.
-- **maximum cardinality** (optional) — the maximum number of elements the collection may contain.
+- **multiplicity** ([Collection Multiplicity](collection-multiplicity.md)) — governs whether duplicate elements are permitted.
+- **iteration order** ([Collection Iteration Order](collection-iteration-order.md)) — governs the sequence in which elements are visited during iteration.
+- **minimum cardinality** ([Integer](integer.md)) — the minimum number of elements the collection must contain.
+- **maximum cardinality** ([Integer](integer.md), optional) — the maximum number of elements the collection may contain.
+
+## Parameters
+
+| Name | Description                                     |
+| ---- | ----------------------------------------------- |
+| `T`  | The type of elements held in the collection.    |
 
 ## Attributes
 
 ### Multiplicity
 
-Governs whether duplicate elements are permitted:
-
-- **unique** — no two elements compare [Equal](equality.md#equal) under the element type's [Equality](equality.md) instance. Adding a duplicate element leaves the collection unchanged.
-- **multi** — duplicate elements are permitted; the same value may appear more than once.
+Type: [Collection Multiplicity](collection-multiplicity.md). Governs whether duplicate elements are permitted. See [Collection Multiplicity](collection-multiplicity.md) for the full definition of each value.
 
 ### Iteration Order
 
-Governs the sequence in which elements are visited during iteration:
-
-- **none** — no iteration order is guaranteed.
-- **insertion** — elements are visited in the order they were added.
-- **key** — elements are visited in ascending order defined by a [Compare](ordering.md#compare) expression over a key derived from each element, equivalent to SQL `ORDER BY`. When two elements produce equal keys, a tie-breaking rule applies:
-  - **stable** — elements with equal keys retain their relative insertion order.
-  - **unstable** — the relative order of elements with equal keys is unspecified.
+Type: [Collection Iteration Order](collection-iteration-order.md). Governs the sequence in which elements are visited during iteration. When the value is **key**, a [tie-breaking](collection-iteration-order.md#tie-breaking) sub-attribute further specifies the relative order of elements with equal keys. See [Collection Iteration Order](collection-iteration-order.md) for the full definition of each value.
 
 ### Minimum Cardinality
 
-The minimum number of elements the collection must contain. When the minimum cardinality is `1` or more, the collection is _non-empty_. Defaults to `0`.
+Type: [Integer](integer.md). The minimum number of elements the collection must contain. When the minimum cardinality is `1` or more, the collection is _non-empty_. Defaults to `0`.
 
 ### Maximum Cardinality
 
-The maximum number of elements the collection may contain. When unspecified, the collection is unbounded.
+Type: [Integer](integer.md), optional. The maximum number of elements the collection may contain. When unspecified, the collection is unbounded.
 
 ## Operations
 
