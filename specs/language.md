@@ -4,7 +4,6 @@ This specification organizes the language into modular, human-readable markdown 
 
 ## Modules
 
-
 ### Types
 
 Concrete data types with named member values.
@@ -14,7 +13,7 @@ Concrete data types with named member values.
 - [Integer](language/integer.md) — whole numbers with optional fixed precision and signedness.
 - [Floating-Point](language/floating-point.md) — real numbers in binary format with fixed size.
 - [Decimal](language/decimal.md) — real numbers in base-10 format with explicit precision and scale.
-
+- [Collection](language/collection.md) — a parameterized type for holding elements with configurable multiplicity, iteration order, and cardinality constraints.
 
 ### Type Classes
 
