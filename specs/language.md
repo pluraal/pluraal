@@ -4,12 +4,17 @@ This specification organizes the language into modular, human-readable markdown 
 
 ## Modules
 
+
 ### Types
 
 Concrete data types with named member values.
 
 - [Boolean](language/boolean.md) — a two-valued type representing truth: `true` and `false`.
 - [Ordering Relation](language/ordering-relation.md) — a three-valued type representing the outcome of a comparison: `Less`, `Equal`, or `Greater`.
+- [Integer](language/integer.md) — whole numbers with optional fixed precision and signedness.
+- [Floating-Point](language/floating-point.md) — real numbers in binary format with fixed size.
+- [Decimal](language/decimal.md) — real numbers in base-10 format with explicit precision and scale.
+
 
 ### Type Classes
 
@@ -18,6 +23,7 @@ Shared interfaces that define operations over types. A type _instances_ a type c
 - [Equality](language/equality.md) — equality and inequality comparison.
 - [Ordering](language/ordering.md) — relative ordering via a three-way [compare](language/ordering.md#compare) operation.
 - [Number](language/number.md) — arithmetic operations for numeric types.
+- [Fractional](language/fractional.md) — division and related operations for non-integer types.
 
 ## Operations
 
