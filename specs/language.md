@@ -21,11 +21,31 @@ Shared interfaces that define operations over types. A type _instances_ a type c
 
 ## Operations
 
-Each operation in a type class module has its own `###` subsection containing:
+Each operation in a type class module has its own subsection containing:
 
 - A [Required](#required) or [Derived](#derived) marker.
 - A description of the operation's semantics.
-- A `#### Test cases` subsection with a table of inputs and expected outputs providing full-coverage test cases.
+- A test cases subsection with a table of inputs and expected outputs providing full-coverage test cases.
+
+Heading depth is relative, not absolute. A test cases subsection must appear
+under the heading of its operation, but additional grouping sections may
+appear between any structural elements. The overall heading hierarchy of a
+module is flexible provided that relative containment relationships are
+preserved.
+
+Built-in operations have no implementation in the language itself unless they
+are [Derived](#derived). Their natural language description and test cases
+together serve as the authoritative semantic reference. Derived operations
+must reference the required operation(s) they are defined in terms of.
+
+## Alternative Formats
+
+When markdown alone is insufficient for precision or conciseness, alternative
+intermediate formats may be used within a module. These may appear as code
+blocks inside the markdown file or as separate artifact files referenced from
+it. In either case, every alternative-format fragment must carry a provenance
+reference --- a link or annotation that identifies the specification section
+or operation it belongs to.
 
 ## Operation Markers
 
