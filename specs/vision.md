@@ -238,3 +238,84 @@ Projections must:
 A projection is validated by running the test cases from the specification
 against the generated implementation. The specification, not the projection,
 is the source of truth.
+
+---
+
+## 10. Type Inference and Document Enrichment
+
+A dedicated tool performs **type inference and type checking** across the
+specification corpus. Its two responsibilities are distinct:
+
+**Type checking** validates that every operation's inputs, outputs, and
+derived relationships are consistent with the declared types across all
+modules. Errors and warnings are reported against the originating
+specification fragment.
+
+**Document enrichment** augments the existing markdown source files with
+type information derived from inference. Enrichment is non-destructive: it
+does not alter the authored prose or table content. Instead, it attaches
+inferred type annotations as **footnotes**, using the caret notation of
+extended Markdown syntax (e.g., `^[inferred type: Boolean]`). These inline
+footnotes appear at the precise location of the annotated term or
+expression, keeping type information co-located with the content it
+describes while remaining visually unobtrusive in rendered output.
+
+This approach preserves full round-trip fidelity: the enriched document
+remains valid, human-readable markdown, and the footnotes serve as
+machine-readable type metadata that further tooling --- including LLMs ---
+can consume during subsequent inference or projection passes.
+
+---
+
+## 11. Live Data Binding and Specification Debugging
+
+A specification can be **bound to a live data source** --- a production
+database, a query result set, or a data file --- and executed against real
+inputs while the operator observes the rendered markdown document.
+
+This creates a **markdown-native debugger** aimed at non-technical
+stakeholders. Rather than presenting stack frames or variable watches, the
+debugger drives a rendered view of the specification itself. As execution
+steps through an operation, the current input values and intermediate
+results are overlaid directly on the relevant section of the markdown
+document: table cells are annotated with live values, rule conditions light
+up as they are evaluated, and the active step is highlighted within the
+prose.
+
+The interaction model mirrors a conventional step-debugger:
+
+- **Bind** — attach a data source (database connection, file, or in-memory
+  dataset) to a specification module.
+- **Step** --- advance execution one operation or one row at a time,
+  observing how values flow through the defined logic.
+- **Inspect** --- hover or select any term in the rendered document to see
+  the current bound value and its provenance in the data source.
+- **Replay** --- re-run the same inputs after editing the specification to
+  observe the effect of the change immediately.
+
+Because the visualization is driven by the markdown document rather than a
+separate debugger UI, the experience is identical whether the viewer is an
+engineer or a domain expert. The specification is the debugger interface.
+
+---
+
+## 12. Immediate Impact Analysis
+
+When a specification is edited, the tool can re-execute the entire
+specification against the current bound data source and **highlight the
+differences in output** relative to the previous run. This gives the author
+immediate, evidence-based feedback on the consequences of a change.
+
+The diff is presented in the rendered markdown view:
+
+- Outputs that changed value are annotated inline, showing both the old and
+  new result.
+- Rows or cases that newly pass or fail a condition are marked visually.
+- Aggregates and derived values that are transitively affected by the change
+  are surfaced, even if the edited operation is not the direct producer.
+
+This transforms specification editing from a write-and-guess workflow into
+a **tight feedback loop**: edit a rule, observe the ripple effect across all
+data immediately, and confirm or revert the change before it propagates
+further. The impact analysis operates on the same markdown-native interface
+as the live debugger, requiring no additional tooling or context switch.
