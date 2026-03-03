@@ -2,27 +2,27 @@
 
 ## Overview
 
-The Ordering type class defines operations for comparing values to determine their relative order. It extends [Equality](equality.md): any type with an ordering also supports equality comparison.
+The Ordering type class defines operations for comparing values to determine their relative order. It extends [Equality][eq]: any type with an ordering also supports equality comparison.
 
 ## Operations
 
-Relational operations return a [Boolean](boolean.md) value.
+Relational operations return a [Boolean][bool] value.
 
 ### Compare
 
-_[Required](../language.md#required)._ Returns an [Ordering Relation](ordering-relation.md) representing the relationship between the first and second value. All other ordering operations are derived from this.
+_[Required][req]._ Returns an [Ordering Relation][or] representing the relationship between the first and second value. All other ordering operations are derived from this.
 
 #### Test cases
 
 | Input A | Input B | Output                                  |
 | ------- | ------- | --------------------------------------- |
-| 1       | 2       | [Less](ordering-relation.md#less)       |
-| 2       | 2       | [Equal](ordering-relation.md#equal)     |
-| 3       | 2       | [Greater](ordering-relation.md#greater) |
+| 1       | 2       | [Less][or-less]    |
+| 2       | 2       | [Equal][or-equal]  |
+| 3       | 2       | [Greater][or-greater] |
 
 ### Less Than
 
-_[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is [Less](ordering-relation.md#less).
+_[Derived][der]._ Returns true when `compare(a, b)` is [Less][or-less].
 
 #### Test cases
 
@@ -34,7 +34,7 @@ _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is [Less]
 
 ### Greater Than
 
-_[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is [Greater](ordering-relation.md#greater).
+_[Derived][der]._ Returns true when `compare(a, b)` is [Greater][or-greater].
 
 #### Test cases
 
@@ -46,7 +46,7 @@ _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is [Great
 
 ### Less Than or Equal
 
-_[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is not [Greater](ordering-relation.md#greater).
+_[Derived][der]._ Returns true when `compare(a, b)` is not [Greater][or-greater].
 
 #### Test cases
 
@@ -58,7 +58,7 @@ _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is not [G
 
 ### Greater Than or Equal
 
-_[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is not [Less](ordering-relation.md#less).
+_[Derived][der]._ Returns true when `compare(a, b)` is not [Less][or-less].
 
 #### Test cases
 
@@ -67,3 +67,12 @@ _[Derived](../language.md#derived)._ Returns true when `compare(a, b)` is not [L
 | 1       | 2       | false  |
 | 2       | 2       | true   |
 | 3       | 2       | true   |
+
+[bool]: boolean.md
+[der]: ../language.md#derived
+[eq]: equality.md
+[or]: ordering-relation.md
+[or-equal]: ordering-relation.md#equal
+[or-greater]: ordering-relation.md#greater
+[or-less]: ordering-relation.md#less
+[req]: ../language.md#required

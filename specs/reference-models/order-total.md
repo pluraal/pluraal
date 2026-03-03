@@ -15,7 +15,7 @@ Calculates the total amount due for a customer order, including a percentage dis
 
 Gross cost before discount or tax.
 
-- [Multiply](../language/number.md#multiplication)
+- [Multiply][mul]
   - `unit_price`
   - `quantity`
 
@@ -32,7 +32,7 @@ Gross cost before discount or tax.
 
 Amount deducted from the subtotal.
 
-- [Multiply](../language/number.md#multiplication)
+- [Multiply][mul]
   - `subtotal`
   - `discount_rate`
 
@@ -66,7 +66,7 @@ Cost after applying the discount.
 
 Sales tax charged on the discounted subtotal.
 
-- [Multiply](../language/number.md#multiplication)
+- [Multiply][mul]
   - `discounted_subtotal`
   - `tax_rate`
 
@@ -100,7 +100,7 @@ Final amount due.
 
 ### `is_valid_quantity`
 
-Returns [true](../language/boolean.md) when `quantity` is at least `1`.
+Returns [true][bool] when `quantity` is at least `1`.
 
 - [Greater Than or Equal](../language/ordering.md#greater-than-or-equal)
   - `quantity`
@@ -117,7 +117,7 @@ Returns [true](../language/boolean.md) when `quantity` is at least `1`.
 
 ### `is_valid_discount`
 
-Returns [true](../language/boolean.md) when `discount_rate` does not exceed `1`.
+Returns [true][bool] when `discount_rate` does not exceed `1`.
 
 - [Less Than or Equal](../language/ordering.md#less-than-or-equal)
   - `discount_rate`
@@ -134,7 +134,7 @@ Returns [true](../language/boolean.md) when `discount_rate` does not exceed `1`.
 
 ### `clamped_discount_rate`
 
-Returns `discount_rate` when `is_valid_discount` is [true](../language/boolean.md), otherwise `0`.
+Returns `discount_rate` when `is_valid_discount` is [true][bool], otherwise `0`.
 
 - [If-Then-Else](../language/boolean.md#if-then-else)
   - `is_valid_discount`
@@ -149,3 +149,6 @@ Returns `discount_rate` when `is_valid_discount` is [true](../language/boolean.m
 | true                | 0.5             | 0.5                     |
 | false               | 1.5             | 0                       |
 | false               | 2               | 0                       |
+
+[bool]: ../language/boolean.md
+[mul]: ../language/number.md#multiplication

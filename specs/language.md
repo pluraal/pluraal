@@ -64,6 +64,29 @@ are [Derived](#derived). Their natural language description and test cases
 together serve as the authoritative semantic reference. Derived operations
 must reference the required operation(s) they are defined in terms of.
 
+## Markdown Conventions
+
+### Link References
+
+When the same hyperlink target appears multiple times in a module, prefer
+_reference-style link definitions_ over repeating the full inline URL. Place
+all link definitions together at the end of the file, one per line, sorted
+alphabetically by label:
+
+```markdown
+[label]: relative/path/to/target.md
+[label2]: relative/path/to/target.md#anchor
+```
+
+Then use the label throughout the file:
+
+```markdown
+Returns a [Boolean][bool] value.
+```
+
+This is not mandatory for links that appear only once, but is encouraged
+whenever a target is referenced two or more times in the same file.
+
 ## Alternative Formats
 
 When markdown alone is insufficient for precision or conciseness, alternative

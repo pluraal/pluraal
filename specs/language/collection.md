@@ -4,10 +4,10 @@
 
 A Collection is a parametric type over an element type `T` that holds zero or more elements. Collections are characterized by four attributes:
 
-- **multiplicity** ([Collection Multiplicity](collection-multiplicity.md)) — governs whether duplicate elements are permitted.
-- **iteration order** ([Collection Iteration Order](collection-iteration-order.md)) — governs the sequence in which elements are visited during iteration.
-- **minimum cardinality** ([Integer](integer.md)) — the minimum number of elements the collection must contain.
-- **maximum cardinality** ([Integer](integer.md), optional) — the maximum number of elements the collection may contain.
+- **multiplicity** ([Collection Multiplicity][col-mult]) — governs whether duplicate elements are permitted.
+- **iteration order** ([Collection Iteration Order][col-iter]) — governs the sequence in which elements are visited during iteration.
+- **minimum cardinality** ([Integer][int]) — the minimum number of elements the collection must contain.
+- **maximum cardinality** ([Integer][int], optional) — the maximum number of elements the collection may contain.
 
 ## Parameters
 
@@ -19,25 +19,25 @@ A Collection is a parametric type over an element type `T` that holds zero or mo
 
 ### Multiplicity
 
-Type: [Collection Multiplicity](collection-multiplicity.md). Governs whether duplicate elements are permitted. See [Collection Multiplicity](collection-multiplicity.md) for the full definition of each value.
+Type: [Collection Multiplicity][col-mult]. Governs whether duplicate elements are permitted. See [Collection Multiplicity][col-mult] for the full definition of each value.
 
 ### Iteration Order
 
-Type: [Collection Iteration Order](collection-iteration-order.md). Governs the sequence in which elements are visited during iteration. When the value is **key**, a [tie-breaking](collection-iteration-order.md#tie-breaking) sub-attribute further specifies the relative order of elements with equal keys. See [Collection Iteration Order](collection-iteration-order.md) for the full definition of each value.
+Type: [Collection Iteration Order][col-iter]. Governs the sequence in which elements are visited during iteration. When the value is **key**, a [tie-breaking](collection-iteration-order.md#tie-breaking) sub-attribute further specifies the relative order of elements with equal keys. See [Collection Iteration Order][col-iter] for the full definition of each value.
 
 ### Minimum Cardinality
 
-Type: [Integer](integer.md). The minimum number of elements the collection must contain. When the minimum cardinality is `1` or more, the collection is _non-empty_. Defaults to `0`.
+Type: [Integer][int]. The minimum number of elements the collection must contain. When the minimum cardinality is `1` or more, the collection is _non-empty_. Defaults to `0`.
 
 ### Maximum Cardinality
 
-Type: [Integer](integer.md), optional. The maximum number of elements the collection may contain. When unspecified, the collection is unbounded.
+Type: [Integer][int], optional. The maximum number of elements the collection may contain. When unspecified, the collection is unbounded.
 
 ## Operations
 
 ### Size
 
-_[Required](../language.md#required)._ Returns the number of elements in the collection.
+_[Required][req]._ Returns the number of elements in the collection.
 
 #### Test cases
 
@@ -50,7 +50,7 @@ _[Required](../language.md#required)._ Returns the number of elements in the col
 
 ### Is Empty
 
-_[Derived](../language.md#derived)._ Returns [Boolean](boolean.md) `true` if the collection contains no elements. Defined as [Size](#size) equal to zero.
+_[Derived][der]._ Returns [Boolean][bool] `true` if the collection contains no elements. Defined as [Size](#size) equal to zero.
 
 #### Test cases
 
@@ -62,7 +62,7 @@ _[Derived](../language.md#derived)._ Returns [Boolean](boolean.md) `true` if the
 
 ### Contains
 
-_[Required](../language.md#required)._ Precondition: element type implements [Equality](equality.md). Returns [Boolean](boolean.md) `true` if any element in the collection compares [Equal](equality.md#equal) to the given value.
+_[Required][req]._ Precondition: element type implements [Equality][eq]. Returns [Boolean][bool] `true` if any element in the collection compares [Equal][eq-equal] to the given value.
 
 #### Test cases
 
@@ -75,7 +75,7 @@ _[Required](../language.md#required)._ Precondition: element type implements [Eq
 
 ### Map
 
-_[Required](../language.md#required)._ Returns a new collection of the same multiplicity and iteration order containing the result of applying a given function to each element. The output cardinality equals the input cardinality.
+_[Required][req]._ Returns a new collection of the same multiplicity and iteration order containing the result of applying a given function to each element. The output cardinality equals the input cardinality.
 
 #### Test cases
 
@@ -87,7 +87,7 @@ _[Required](../language.md#required)._ Returns a new collection of the same mult
 
 ### Filter
 
-_[Required](../language.md#required)._ Returns a new collection containing only the elements for which a given predicate returns [Boolean](boolean.md) `true`, preserving multiplicity and iteration order.
+_[Required][req]._ Returns a new collection containing only the elements for which a given predicate returns [Boolean][bool] `true`, preserving multiplicity and iteration order.
 
 #### Test cases
 
@@ -100,7 +100,7 @@ _[Required](../language.md#required)._ Returns a new collection containing only 
 
 ### Distinct
 
-_[Required](../language.md#required)._ Precondition: element type implements [Equality](equality.md). Returns a new collection with duplicates removed so that no two elements compare [Equal](equality.md#equal). The resulting collection has multiplicity **unique**.
+_[Required][req]._ Precondition: element type implements [Equality][eq]. Returns a new collection with duplicates removed so that no two elements compare [Equal][eq-equal]. The resulting collection has multiplicity **unique**.
 
 When iteration order is **insertion** or **key**, the first occurrence of each distinct value is retained and relative order is preserved (stable). When iteration order is **none**, the relative order of retained elements is unspecified.
 
@@ -115,7 +115,7 @@ When iteration order is **insertion** or **key**, the first occurrence of each d
 
 ### Union
 
-_[Required](../language.md#required)._ Precondition: element type implements [Equality](equality.md). Returns a collection containing all elements from either collection.
+_[Required][req]._ Precondition: element type implements [Equality][eq]. Returns a collection containing all elements from either collection.
 
 - For **unique** collections: each distinct element appears exactly once (set union).
 - For **multi** collections: each element appears as many times as the sum of its occurrences across both collections (bag union).
@@ -131,7 +131,7 @@ _[Required](../language.md#required)._ Precondition: element type implements [Eq
 
 ### Intersect
 
-_[Required](../language.md#required)._ Precondition: element type implements [Equality](equality.md). Returns a collection containing only elements that appear in both collections.
+_[Required][req]._ Precondition: element type implements [Equality][eq]. Returns a collection containing only elements that appear in both collections.
 
 - For **unique** collections: each distinct common element appears exactly once (set intersection).
 - For **multi** collections: each element appears as many times as the minimum of its occurrences in each collection (bag intersection).
@@ -147,7 +147,7 @@ _[Required](../language.md#required)._ Precondition: element type implements [Eq
 
 ### Difference
 
-_[Required](../language.md#required)._ Precondition: element type implements [Equality](equality.md). Returns a collection containing elements from the first collection that do not appear in the second.
+_[Required][req]._ Precondition: element type implements [Equality][eq]. Returns a collection containing elements from the first collection that do not appear in the second.
 
 - For **unique** collections: each element of the first that is absent from the second appears exactly once (set difference).
 - For **multi** collections: the occurrence count of each element is reduced by its occurrence count in the second collection, with a floor of zero (bag difference).
@@ -163,7 +163,7 @@ _[Required](../language.md#required)._ Precondition: element type implements [Eq
 
 ### Sort By
 
-_[Required](../language.md#required)._ Precondition: a key function and a [Compare](ordering.md#compare) expression over the key type are provided. Returns a new collection with elements ordered by the key in ascending order. The resulting collection has iteration order **key**. Tie-breaking is stable: elements with equal keys retain their relative input order.
+_[Required][req]._ Precondition: a key function and a [Compare][compare] expression over the key type are provided. Returns a new collection with elements ordered by the key in ascending order. The resulting collection has iteration order **key**. Tie-breaking is stable: elements with equal keys retain their relative input order.
 
 #### Test cases
 
@@ -176,7 +176,7 @@ _[Required](../language.md#required)._ Precondition: a key function and a [Compa
 
 ### Then By
 
-_[Derived](../language.md#derived)._ Precondition: a preceding [Sort By](#sort-by) or Then By has established a primary key ordering; a secondary key function and [Compare](ordering.md#compare) expression over the secondary key type are provided. Returns a new collection where elements with equal primary keys are further ordered by the secondary key. Tie-breaking on the secondary key is stable. Defined in terms of [Sort By](#sort-by) applied to a composite key that lexicographically combines the primary and secondary keys.
+_[Derived][der]._ Precondition: a preceding [Sort By](#sort-by) or Then By has established a primary key ordering; a secondary key function and [Compare][compare] expression over the secondary key type are provided. Returns a new collection where elements with equal primary keys are further ordered by the secondary key. Tie-breaking on the secondary key is stable. Defined in terms of [Sort By](#sort-by) applied to a composite key that lexicographically combines the primary and secondary keys.
 
 #### Test cases
 
@@ -187,7 +187,7 @@ _[Derived](../language.md#derived)._ Precondition: a preceding [Sort By](#sort-b
 
 ### Min
 
-_[Required](../language.md#required)._ Precondition: element type implements [Ordering](ordering.md); minimum cardinality ≥ 1. Returns the smallest element according to [Compare](ordering.md#compare). If multiple elements are [Equal](ordering-relation.md#equal), any one of them may be returned.
+_[Required][req]._ Precondition: element type implements [Ordering][ord]; minimum cardinality ≥ 1. Returns the smallest element according to [Compare][compare]. If multiple elements are [Equal][or-equal], any one of them may be returned.
 
 #### Test cases
 
@@ -199,7 +199,7 @@ _[Required](../language.md#required)._ Precondition: element type implements [Or
 
 ### Max
 
-_[Required](../language.md#required)._ Precondition: element type implements [Ordering](ordering.md); minimum cardinality ≥ 1. Returns the largest element according to [Compare](ordering.md#compare). If multiple elements are [Equal](ordering-relation.md#equal), any one of them may be returned.
+_[Required][req]._ Precondition: element type implements [Ordering][ord]; minimum cardinality ≥ 1. Returns the largest element according to [Compare][compare]. If multiple elements are [Equal][or-equal], any one of them may be returned.
 
 #### Test cases
 
@@ -211,7 +211,7 @@ _[Required](../language.md#required)._ Precondition: element type implements [Or
 
 ### Min Or None
 
-_[Derived](../language.md#derived)._ Precondition: element type implements [Ordering](ordering.md). Returns the smallest element if the collection is non-empty, or an absent value otherwise. Defined in terms of [Is Empty](#is-empty) and [Min](#min).
+_[Derived][der]._ Precondition: element type implements [Ordering][ord]. Returns the smallest element if the collection is non-empty, or an absent value otherwise. Defined in terms of [Is Empty](#is-empty) and [Min](#min).
 
 #### Test cases
 
@@ -223,7 +223,7 @@ _[Derived](../language.md#derived)._ Precondition: element type implements [Orde
 
 ### Max Or None
 
-_[Derived](../language.md#derived)._ Precondition: element type implements [Ordering](ordering.md). Returns the largest element if the collection is non-empty, or an absent value otherwise. Defined in terms of [Is Empty](#is-empty) and [Max](#max).
+_[Derived][der]._ Precondition: element type implements [Ordering][ord]. Returns the largest element if the collection is non-empty, or an absent value otherwise. Defined in terms of [Is Empty](#is-empty) and [Max](#max).
 
 #### Test cases
 
@@ -235,7 +235,7 @@ _[Derived](../language.md#derived)._ Precondition: element type implements [Orde
 
 ### Reduce
 
-_[Required](../language.md#required)._ Precondition: minimum cardinality ≥ 1. Combines all elements using a binary associative function without an initial accumulator, returning a single value of the same type.
+_[Required][req]._ Precondition: minimum cardinality ≥ 1. Combines all elements using a binary associative function without an initial accumulator, returning a single value of the same type.
 
 #### Test cases
 
@@ -247,7 +247,7 @@ _[Required](../language.md#required)._ Precondition: minimum cardinality ≥ 1. 
 
 ### Reduce Or None
 
-_[Derived](../language.md#derived)._ Like [Reduce](#reduce) but returns an absent value when the collection is empty. Defined in terms of [Is Empty](#is-empty) and [Reduce](#reduce).
+_[Derived][der]._ Like [Reduce](#reduce) but returns an absent value when the collection is empty. Defined in terms of [Is Empty](#is-empty) and [Reduce](#reduce).
 
 #### Test cases
 
@@ -259,7 +259,7 @@ _[Derived](../language.md#derived)._ Like [Reduce](#reduce) but returns an absen
 
 ### Sum
 
-_[Derived](../language.md#derived)._ Precondition: element type implements [Number](number.md). Returns the total of all elements. Defined as [Reduce](#reduce) with [Addition](number.md#addition) when the collection is non-empty, and zero otherwise.
+_[Derived][der]._ Precondition: element type implements [Number][num]. Returns the total of all elements. Defined as [Reduce](#reduce) with [Addition](number.md#addition) when the collection is non-empty, and zero otherwise.
 
 #### Test cases
 
@@ -272,7 +272,7 @@ _[Derived](../language.md#derived)._ Precondition: element type implements [Numb
 
 ### Average
 
-_[Derived](../language.md#derived)._ Precondition: element type implements [Number](number.md); minimum cardinality ≥ 1. Returns the arithmetic mean of all elements. Defined as [Sum](#sum) divided by [Size](#size).
+_[Derived][der]._ Precondition: element type implements [Number][num]; minimum cardinality ≥ 1. Returns the arithmetic mean of all elements. Defined as [Sum](#sum) divided by [Size](#size).
 
 #### Test cases
 
@@ -285,3 +285,16 @@ _[Derived](../language.md#derived)._ Precondition: element type implements [Numb
 ## Type Class Instances
 
 Collection does not itself implement a type class. The applicability of individual operations depends on the element type's type class instances and the collection's attribute values, as stated in each operation's preconditions.
+
+[bool]: boolean.md
+[col-iter]: collection-iteration-order.md
+[col-mult]: collection-multiplicity.md
+[compare]: ordering.md#compare
+[der]: ../language.md#derived
+[eq]: equality.md
+[eq-equal]: equality.md#equal
+[int]: integer.md
+[num]: number.md
+[or-equal]: ordering-relation.md#equal
+[ord]: ordering.md
+[req]: ../language.md#required
