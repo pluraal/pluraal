@@ -39,12 +39,12 @@ Default schedule:
 
 Assets eligible for HQLA consideration. Encumbered and defaulted assets are excluded.
 
-- [Where](../language/relation.md#where)
+- [Where][where]
   - `assets`
-  - [And](../language/boolean.md#and)
-    - [Not](../language/boolean.md#not)
+  - [And][and]
+    - [Not][not]
       - `is_encumbered`
-    - [Not](../language/boolean.md#not)
+    - [Not][not]
       - `is_defaulted`
 
 #### Test cases
@@ -65,49 +65,49 @@ Each unencumbered asset is assigned an HQLA level based on its asset type and cr
 - **level_2b**: corporate bonds with "BBB" credit rating and equity securities included in a major index.
 - **non_hqla**: all other assets.
 
-- [With Column](../language/relation.md#with-column)
+- [With Column][with-col]
   - `unencumbered_assets`
   - `hqla_level`
-  - [If-Then-Else](../language/boolean.md#if-then-else)
-    - [Or](../language/boolean.md#or)
-      - [Equal](../language/equality.md#equal)
+  - [If-Then-Else][ite]
+    - [Or][or]
+      - [Equal][eq]
         - `asset_type`
         - `"cash"`
-      - [And](../language/boolean.md#and)
-        - [Equal](../language/equality.md#equal)
+      - [And][and]
+        - [Equal][eq]
           - `asset_type`
           - `"treasury"`
-        - [Or](../language/boolean.md#or)
-          - [Equal](../language/equality.md#equal)
+        - [Or][or]
+          - [Equal][eq]
             - `credit_rating`
             - `"AAA"`
-          - [Equal](../language/equality.md#equal)
+          - [Equal][eq]
             - `credit_rating`
             - `"AA"`
     - `"level_1"`
-    - [If-Then-Else](../language/boolean.md#if-then-else)
-      - [And](../language/boolean.md#and)
-        - [Equal](../language/equality.md#equal)
+    - [If-Then-Else][ite]
+      - [And][and]
+        - [Equal][eq]
           - `asset_type`
           - `"corporate_bond"`
-        - [Or](../language/boolean.md#or)
-          - [Equal](../language/equality.md#equal)
+        - [Or][or]
+          - [Equal][eq]
             - `credit_rating`
             - `"AA"`
-          - [Equal](../language/equality.md#equal)
+          - [Equal][eq]
             - `credit_rating`
             - `"A"`
       - `"level_2a"`
-      - [If-Then-Else](../language/boolean.md#if-then-else)
-        - [Or](../language/boolean.md#or)
-          - [And](../language/boolean.md#and)
-            - [Equal](../language/equality.md#equal)
+      - [If-Then-Else][ite]
+        - [Or][or]
+          - [And][and]
+            - [Equal][eq]
               - `asset_type`
               - `"corporate_bond"`
-            - [Equal](../language/equality.md#equal)
+            - [Equal][eq]
               - `credit_rating`
               - `"BBB"`
-          - [Equal](../language/equality.md#equal)
+          - [Equal][eq]
             - `asset_type`
             - `"equity"`
         - `"level_2b"`
@@ -131,9 +131,9 @@ Each unencumbered asset is assigned an HQLA level based on its asset type and cr
 
 Only assets classified into an HQLA level (level\_1, level\_2a, or level\_2b) are retained.
 
-- [Where](../language/relation.md#where)
+- [Where][where]
   - `classified_assets`
-  - [Not Equal](../language/equality.md#not-equal)
+  - [Not Equal][neq]
     - `hqla_level`
     - `"non_hqla"`
 
@@ -150,17 +150,17 @@ Only assets classified into an HQLA level (level\_1, level\_2a, or level\_2b) ar
 
 Each qualifying asset is joined to the haircut schedule, and a weighted value is computed as market\_value × (1 − haircut\_rate).
 
-- [With Column](../language/relation.md#with-column)
-  - [Inner Join](../language/relation.md#inner-join)
+- [With Column][with-col]
+  - [Inner Join][join]
     - `hqla_only`
     - `haircut_schedule`
-    - [Equal](../language/equality.md#equal)
+    - [Equal][eq]
       - `hqla_level`
       - `hqla_level`
   - `weighted_value`
   - [Multiply][mul]
     - `market_value`
-    - [Subtract](../language/number.md#subtraction)
+    - [Subtract][sub]
       - `1`
       - `haircut_rate`
 
@@ -176,10 +176,10 @@ Each qualifying asset is joined to the haircut schedule, and a weighted value is
 
 Weighted values aggregated by HQLA level.
 
-- [Group By](../language/relation.md#group-by)
+- [Group By][group-by]
   - `haircut_applied`
   - `hqla_level`
-  - [Sum](../language/relation.md#sum) of `weighted_value` as `level_total`
+  - [Sum][rel-sum] of `weighted_value` as `level_total`
 
 #### Test cases
 
@@ -193,7 +193,7 @@ Weighted values aggregated by HQLA level.
 
 Sum of all weighted values before regulatory caps.
 
-- [Sum](../language/relation.md#sum)
+- [Sum][rel-sum]
   - `totals_by_level`
   - `level_total`
 
@@ -225,10 +225,10 @@ Under the US LCR, Level 2B assets may not exceed 15% of total HQLA. This compute
 
 Actual weighted Level 2B total from the aggregation.
 
-- [Get](../language/record.md#get)
-  - [Where](../language/relation.md#where)
+- [Get][rec-get]
+  - [Where][where]
     - `totals_by_level`
-    - [Equal](../language/equality.md#equal)
+    - [Equal][eq]
       - `hqla_level`
       - `"level_2b"`
   - `level_total`
@@ -243,11 +243,11 @@ Actual weighted Level 2B total from the aggregation.
 
 Amount by which Level 2B exceeds the regulatory cap. Zero when Level 2B is within the cap.
 
-- [If-Then-Else](../language/boolean.md#if-then-else)
-  - [Greater Than](../language/ordering.md#greater-than)
+- [If-Then-Else][ite]
+  - [Greater Than][gt]
     - `level_2b_total`
     - `level_2b_cap`
-  - [Subtract](../language/number.md#subtraction)
+  - [Subtract][sub]
     - `level_2b_total`
     - `level_2b_cap`
   - `0`
@@ -264,7 +264,7 @@ Amount by which Level 2B exceeds the regulatory cap. Zero when Level 2B is withi
 
 Total HQLA after applying the Level 2B cap.
 
-- [Subtract](../language/number.md#subtraction)
+- [Subtract][sub]
   - `unadjusted_hqla`
   - `level_2b_excess`
 
@@ -276,4 +276,18 @@ Total HQLA after applying the Level 2B cap.
 | 1000               | 150               | 850              |
 | 0                  | 0                 | 0                |
 
+[and]: ../language/boolean.md#and
+[eq]: ../language/equality.md#equal
+[group-by]: ../language/relation.md#group-by
+[gt]: ../language/ordering.md#greater-than
+[ite]: ../language/boolean.md#if-then-else
+[join]: ../language/relation.md#inner-join
 [mul]: ../language/number.md#multiplication
+[neq]: ../language/equality.md#not-equal
+[not]: ../language/boolean.md#not
+[or]: ../language/boolean.md#or
+[rec-get]: ../language/record.md#get
+[rel-sum]: ../language/relation.md#sum
+[sub]: ../language/number.md#subtraction
+[where]: ../language/relation.md#where
+[with-col]: ../language/relation.md#with-column
