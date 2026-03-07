@@ -28,8 +28,13 @@ export const OPERATIONS: Record<string, Op> = {
   "greater-than-or-equal": (a, b) => (a as number) >= (b as number),
 
   // Equality type class
-  equals: (a, b) => a === b,
-  "not-equals": (a, b) => a !== b,
+  equal: (a, b) => a === b,
+  "not-equal": (a, b) => a !== b,
+
+  // Boolean type
+  not: (a) => !(a as boolean),
+  and: (a, b) => (a as boolean) && (b as boolean),
+  or: (a, b) => (a as boolean) || (b as boolean),
 
   // Control flow
   "if-then-else": (cond, then_, else_) => (cond as boolean) ? then_ : else_,

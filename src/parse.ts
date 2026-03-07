@@ -10,8 +10,10 @@ import type {
   ListItem,
   Paragraph,
   Link,
+  LinkReference,
   InlineCode,
   Table,
+  Definition as MdDefinition,
 } from "mdast";
 import type { Expr, Definition, TestCase, UserModule, Value } from "./types.js";
 
@@ -63,9 +65,12 @@ function nodeText(
 // Expression parsing
 // ---------------------------------------------------------------------------
 
-function parseListItemExpr(item: ListItem): Expr {
+function parseListItemExpr(
+  item: ListItem,
+  linkDefs: Map<string, string>,
+): Expr {
   // A ListItem has:
-  //   children[0]  — Paragraph with the expression content (link | inlineCode | text)
+  //   children[0]  — Paragraph with the expression content (link | linkReference | inlineCode | text)
   //   children[1]? — nested List with arguments
   const para = item.children[0];
   if (!para || para.type !== "paragraph") {
@@ -75,7 +80,9 @@ function parseListItemExpr(item: ListItem): Expr {
   const nestedList = item.children[1];
   const args: Expr[] =
     nestedList && isList(nestedList as RootContent)
-      ? (nestedList as List).children.map(parseListItemExpr)
+      ? (nestedList as List).children.map((c) =>
+          parseListItemExpr(c, linkDefs),
+        )
       : [];
 
   const first = p.children[0];
@@ -83,6 +90,17 @@ function parseListItemExpr(item: ListItem): Expr {
   if (first.type === "link") {
     const link = first as Link;
     return { kind: "call", op: link.url, args };
+  }
+
+  if (first.type === "linkReference") {
+    const ref = first as LinkReference;
+    const url = linkDefs.get(ref.identifier);
+    if (!url) {
+      throw new Error(
+        `Unresolved link reference: [${ref.label ?? ref.identifier}]`,
+      );
+    }
+    return { kind: "call", op: url, args };
   }
 
   if (first.type === "inlineCode") {
@@ -101,18 +119,21 @@ function parseListItemExpr(item: ListItem): Expr {
 function parseScalar(raw: string): Expr {
   if (raw === "true") return { kind: "literal", value: true };
   if (raw === "false") return { kind: "literal", value: false };
+  if (raw.length >= 2 && raw.startsWith('"') && raw.endsWith('"')) {
+    return { kind: "literal", value: raw.slice(1, -1) };
+  }
   const num = Number(raw);
   if (!isNaN(num) && raw !== "") return { kind: "literal", value: num };
   return { kind: "var", name: raw };
 }
 
-function parseExprFromList(list: List): Expr {
+function parseExprFromList(list: List, linkDefs: Map<string, string>): Expr {
   if (list.children.length === 0) {
     throw new Error("Expression list is empty");
   }
   // The top-level list should have exactly one root expression item.
   // (Multiple items would be ambiguous; spec always uses one root.)
-  return parseListItemExpr(list.children[0]);
+  return parseListItemExpr(list.children[0], linkDefs);
 }
 
 // ---------------------------------------------------------------------------
@@ -122,6 +143,9 @@ function parseExprFromList(list: List): Expr {
 function parseCellValue(raw: string): Value {
   if (raw === "true") return true;
   if (raw === "false") return false;
+  if (raw.length >= 2 && raw.startsWith('"') && raw.endsWith('"')) {
+    return raw.slice(1, -1);
+  }
   const num = Number(raw);
   if (!isNaN(num) && raw !== "") return num;
   return raw;
@@ -174,6 +198,7 @@ function parseTestCases(table: Table, definitionName: string): TestCase[] {
 function parseDefinition(
   nodes: RootContent[],
   startIndex: number,
+  linkDefs: Map<string, string>,
 ): { definition: Definition; nextIndex: number } {
   const headingNode = nodes[startIndex] as Heading;
   const rawName = nodeText(headingNode as Parameters<typeof nodeText>[0]);
@@ -205,7 +230,7 @@ function parseDefinition(
 
     if (isList(node) && !inTestCases && expr === null) {
       // First list in the definition body is the expression.
-      expr = parseExprFromList(node as List);
+      expr = parseExprFromList(node as List, linkDefs);
       i++;
       continue;
     }
@@ -238,6 +263,15 @@ export async function parseUserModule(filePath: string): Promise<UserModule> {
   const processor = unified().use(remarkParse).use(remarkGfm);
   const root = processor.parse(source) as Root;
   const nodes = root.children as RootContent[];
+
+  // Collect reference-style link definitions ([label]: url).
+  const linkDefs = new Map<string, string>();
+  for (const node of nodes) {
+    if (node.type === "definition") {
+      const def = node as MdDefinition;
+      linkDefs.set(def.identifier, def.url);
+    }
+  }
 
   let title = "";
   const inputs: string[] = [];
@@ -278,7 +312,7 @@ export async function parseUserModule(filePath: string): Promise<UserModule> {
 
     // Under "Definitions" or "Validations" or any h2 section: parse h3 definitions.
     if (isHeading(node, 3)) {
-      const { definition, nextIndex } = parseDefinition(nodes, i);
+      const { definition, nextIndex } = parseDefinition(nodes, i, linkDefs);
       definitions.push(definition);
       i = nextIndex;
       continue;
