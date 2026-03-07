@@ -4,206 +4,149 @@ Classifies financial assets into High Quality Liquid Asset (HQLA) categories, ap
 
 The LCR requires banks to maintain sufficient HQLA to cover net cash outflows over a 30-day stress period. This module models the asset-side classification: determining which assets qualify as HQLA, assigning a regulatory haircut, and computing the final weighted value.
 
+## Relational Pipeline
+
+The full regulation operates as a relational pipeline over a table of financial assets:
+
+1. **Filter** unencumbered, non-defaulted assets using [Where](../language/relation.md#where).
+2. **Classify** each asset into an HQLA level using [With Column](../language/relation.md#with-column).
+3. **Exclude** non-HQLA assets using [Where](../language/relation.md#where).
+4. **Join** with the haircut schedule using [Inner Join](../language/relation.md#inner-join) and compute weighted values.
+5. **Aggregate** weighted values by level using [Group By](../language/relation.md#group-by).
+6. **Apply caps** and compute the final adjusted HQLA total.
+
+The definitions below express each step's row-level logic so that the classification, eligibility, and computation rules can be verified independently.
+
 ## Inputs
 
-- `assets` — a [Relation](../language/relation.md) of financial assets with the following schema:
-
-| Field             | Type                                      | Description                              |
-| ----------------- | ----------------------------------------- | ---------------------------------------- |
-| `asset_id`        | [Text](../language/text.md)               | Unique identifier for the asset.         |
-| `asset_type`      | [Text](../language/text.md)               | Category such as "cash", "treasury", "corporate_bond", "equity", "other". |
-| `market_value`    | [Decimal](../language/decimal.md)         | Current fair market value.               |
-| `is_encumbered`   | [Boolean](../language/boolean.md)         | True when the asset is pledged or restricted. |
-| `is_defaulted`    | [Boolean](../language/boolean.md)         | True when the issuer is in default.      |
-| `credit_rating`   | [Text](../language/text.md)               | External credit rating (e.g., "AAA", "AA", "A", "BBB", "below_BBB"). |
-| `maturity_days`   | [Integer](../language/integer.md)         | Days until maturity from the reporting date. |
-
-- `haircut_schedule` — a [Relation](../language/relation.md) providing the regulatory haircut for each HQLA level:
-
-| Field          | Type                                  | Description                                  |
-| -------------- | ------------------------------------- | -------------------------------------------- |
-| `hqla_level`   | [Text](../language/text.md)           | HQLA classification level.                   |
-| `haircut_rate` | [Decimal](../language/decimal.md)     | Fractional haircut (e.g., 0.15 for 15%).     |
-
-Default schedule:
-
-| `hqla_level` | `haircut_rate` |
-| ------------- | -------------- |
-| "level_1"     | 0              |
-| "level_2a"    | 0.15           |
-| "level_2b"    | 0.50           |
+- `asset_type` — category such as "cash", "treasury", "corporate\_bond", "equity", "other"
+- `credit_rating` — external credit rating (e.g., "AAA", "AA", "A", "BBB", "below\_BBB")
+- `is_encumbered` — true when the asset is pledged or restricted
+- `is_defaulted` — true when the issuer is in default
+- `market_value` — current fair market value
+- `haircut_rate` — fractional regulatory haircut (e.g., 0.15 for 15%)
+- `unadjusted_hqla` — total weighted HQLA before regulatory caps
+- `level_2b_total` — weighted total of Level 2B assets
 
 ## Definitions
 
-### `unencumbered_assets`
+### `is_unencumbered`
 
-Assets eligible for HQLA consideration. Encumbered and defaulted assets are excluded.
+Returns [true][bool] when the asset is eligible for HQLA consideration. Encumbered and defaulted assets are excluded.
 
-- [Where][where]
-  - `assets`
-  - [And][and]
-    - [Not][not]
-      - `is_encumbered`
-    - [Not][not]
-      - `is_defaulted`
+- [And][and]
+  - [Not][not]
+    - `is_encumbered`
+  - [Not][not]
+    - `is_defaulted`
 
 #### Test cases
 
-| `asset_id` | `asset_type` | `market_value` | `is_encumbered` | `is_defaulted` | `credit_rating` | `maturity_days` | in `unencumbered_assets` |
-| ---------- | ------------ | -------------- | --------------- | -------------- | --------------- | --------------- | ------------------------ |
-| "A1"       | "treasury"   | 1000           | false           | false          | "AAA"           | 30              | true                     |
-| "A2"       | "treasury"   | 500            | true            | false          | "AAA"           | 60              | false                    |
-| "A3"       | "equity"     | 200            | false           | true           | "BBB"           | 90              | false                    |
-| "A4"       | "cash"       | 800            | false           | false          | "AAA"           | 0               | true                     |
+| `is_encumbered` | `is_defaulted` | `is_unencumbered` |
+| --------------- | -------------- | ----------------- |
+| false           | false          | true              |
+| true            | false          | false             |
+| false           | true           | false             |
+| true            | true           | false             |
 
-### `classified_assets`
+### `hqla_level`
 
-Each unencumbered asset is assigned an HQLA level based on its asset type and credit rating. The classification rules are:
+Assigns an HQLA classification level based on asset type and credit rating. The classification rules are: **level\_1** — cash, treasury securities, and sovereign debt with "AAA" or "AA" credit rating; **level\_2a** — corporate bonds with "AA" or "A" credit rating; **level\_2b** — corporate bonds with "BBB" credit rating or equity securities; **non\_hqla** — all other assets.
 
-- **level_1**: cash, treasury securities, and sovereign debt with "AAA" or "AA" credit rating.
-- **level_2a**: agency securities and corporate bonds with "AA" or "A" credit rating.
-- **level_2b**: corporate bonds with "BBB" credit rating and equity securities included in a major index.
-- **non_hqla**: all other assets.
-
-- [With Column][with-col]
-  - `unencumbered_assets`
-  - `hqla_level`
-  - [If-Then-Else][ite]
-    - [Or][or]
+- [If-Then-Else][ite]
+  - [Or][or]
+    - [Equal][eq]
+      - `asset_type`
+      - `"cash"`
+    - [And][and]
       - [Equal][eq]
         - `asset_type`
-        - `"cash"`
-      - [And][and]
+        - `"treasury"`
+      - [Or][or]
         - [Equal][eq]
-          - `asset_type`
-          - `"treasury"`
-        - [Or][or]
-          - [Equal][eq]
-            - `credit_rating`
-            - `"AAA"`
-          - [Equal][eq]
-            - `credit_rating`
-            - `"AA"`
-    - `"level_1"`
+          - `credit_rating`
+          - `"AAA"`
+        - [Equal][eq]
+          - `credit_rating`
+          - `"AA"`
+  - `"level_1"`
+  - [If-Then-Else][ite]
+    - [And][and]
+      - [Equal][eq]
+        - `asset_type`
+        - `"corporate_bond"`
+      - [Or][or]
+        - [Equal][eq]
+          - `credit_rating`
+          - `"AA"`
+        - [Equal][eq]
+          - `credit_rating`
+          - `"A"`
+    - `"level_2a"`
     - [If-Then-Else][ite]
-      - [And][and]
-        - [Equal][eq]
-          - `asset_type`
-          - `"corporate_bond"`
-        - [Or][or]
-          - [Equal][eq]
-            - `credit_rating`
-            - `"AA"`
-          - [Equal][eq]
-            - `credit_rating`
-            - `"A"`
-      - `"level_2a"`
-      - [If-Then-Else][ite]
-        - [Or][or]
-          - [And][and]
-            - [Equal][eq]
-              - `asset_type`
-              - `"corporate_bond"`
-            - [Equal][eq]
-              - `credit_rating`
-              - `"BBB"`
+      - [Or][or]
+        - [And][and]
           - [Equal][eq]
             - `asset_type`
-            - `"equity"`
-        - `"level_2b"`
-        - `"non_hqla"`
+            - `"corporate_bond"`
+          - [Equal][eq]
+            - `credit_rating`
+            - `"BBB"`
+        - [Equal][eq]
+          - `asset_type`
+          - `"equity"`
+      - `"level_2b"`
+      - `"non_hqla"`
 
 #### Test cases
 
-| `asset_type`      | `credit_rating` | `hqla_level` |
-| ----------------- | --------------- | ------------ |
-| "cash"            | "AAA"           | "level_1"    |
-| "treasury"        | "AAA"           | "level_1"    |
-| "treasury"        | "AA"            | "level_1"    |
-| "treasury"        | "A"             | "non_hqla"   |
-| "corporate_bond"  | "AA"            | "level_2a"   |
-| "corporate_bond"  | "A"             | "level_2a"   |
-| "corporate_bond"  | "BBB"           | "level_2b"   |
-| "equity"          | "BBB"           | "level_2b"   |
-| "other"           | "AAA"           | "non_hqla"   |
+| `asset_type`     | `credit_rating` | `hqla_level` |
+| ---------------- | --------------- | ------------ |
+| "cash"           | "AAA"           | "level_1"    |
+| "treasury"       | "AAA"           | "level_1"    |
+| "treasury"       | "AA"            | "level_1"    |
+| "treasury"       | "A"             | "non_hqla"   |
+| "corporate_bond" | "AA"            | "level_2a"   |
+| "corporate_bond" | "A"             | "level_2a"   |
+| "corporate_bond" | "BBB"           | "level_2b"   |
+| "equity"         | "BBB"           | "level_2b"   |
+| "other"          | "AAA"           | "non_hqla"   |
 
-### `hqla_only`
+### `is_hqla`
 
-Only assets classified into an HQLA level (level\_1, level\_2a, or level\_2b) are retained.
+Returns [true][bool] when the asset is classified into an HQLA level (level\_1, level\_2a, or level\_2b).
 
-- [Where][where]
-  - `classified_assets`
-  - [Not Equal][neq]
-    - `hqla_level`
-    - `"non_hqla"`
-
-#### Test cases
-
-| `asset_id` | `hqla_level` | in `hqla_only` |
-| ---------- | ------------ | --------------- |
-| "A1"       | "level_1"    | true            |
-| "A5"       | "level_2a"   | true            |
-| "A6"       | "level_2b"   | true            |
-| "A7"       | "non_hqla"   | false           |
-
-### `haircut_applied`
-
-Each qualifying asset is joined to the haircut schedule, and a weighted value is computed as market\_value × (1 − haircut\_rate).
-
-- [With Column][with-col]
-  - [Inner Join][join]
-    - `hqla_only`
-    - `haircut_schedule`
-    - [Equal][eq]
-      - `hqla_level`
-      - `hqla_level`
-  - `weighted_value`
-  - [Multiply][mul]
-    - `market_value`
-    - [Subtract][sub]
-      - `1`
-      - `haircut_rate`
-
-#### Test cases
-
-| `asset_id` | `market_value` | `hqla_level` | `haircut_rate` | `weighted_value` |
-| ---------- | -------------- | ------------ | -------------- | ---------------- |
-| "A1"       | 1000           | "level_1"    | 0              | 1000             |
-| "A5"       | 600            | "level_2a"   | 0.15           | 510              |
-| "A6"       | 400            | "level_2b"   | 0.50           | 200              |
-
-### `totals_by_level`
-
-Weighted values aggregated by HQLA level.
-
-- [Group By][group-by]
-  - `haircut_applied`
+- [Not Equal][neq]
   - `hqla_level`
-  - [Sum][rel-sum] of `weighted_value` as `level_total`
+  - `"non_hqla"`
 
 #### Test cases
 
-| `hqla_level` | `level_total` |
-| ------------- | ------------- |
-| "level_1"     | 1000          |
-| "level_2a"    | 510           |
-| "level_2b"    | 200           |
+| `hqla_level` | `is_hqla` |
+| ------------ | --------- |
+| "level_1"    | true      |
+| "level_2a"   | true      |
+| "level_2b"   | true      |
+| "non_hqla"   | false     |
 
-### `unadjusted_hqla`
+### `weighted_value`
 
-Sum of all weighted values before regulatory caps.
+Computes the HQLA-weighted value of an asset after applying the regulatory haircut: market\_value × (1 − haircut\_rate).
 
-- [Sum][rel-sum]
-  - `totals_by_level`
-  - `level_total`
+- [Multiply][mul]
+  - `market_value`
+  - [Subtract][sub]
+    - `1`
+    - `haircut_rate`
 
 #### Test cases
 
-| `level_total` values    | `unadjusted_hqla` |
-| ----------------------- | ------------------ |
-| [1000, 510, 200]        | 1710               |
-| [500]                   | 500                |
-| []                      | 0                  |
+| `market_value` | `haircut_rate` | `weighted_value` |
+| -------------- | -------------- | ---------------- |
+| 1000           | 0              | 1000             |
+| 600            | 0.15           | 510              |
+| 400            | 0.50           | 200              |
+| 0              | 0.15           | 0                |
 
 ### `level_2b_cap`
 
@@ -220,24 +163,6 @@ Under the US LCR, Level 2B assets may not exceed 15% of total HQLA. This compute
 | 1710               | 256.5          |
 | 1000               | 150            |
 | 0                  | 0              |
-
-### `level_2b_total`
-
-Actual weighted Level 2B total from the aggregation.
-
-- [Get][rec-get]
-  - [Where][where]
-    - `totals_by_level`
-    - [Equal][eq]
-      - `hqla_level`
-      - `"level_2b"`
-  - `level_total`
-
-#### Test cases
-
-| `totals_by_level`                                                           | `level_2b_total` |
-| --------------------------------------------------------------------------- | ---------------- |
-| [{hqla_level: "level_1", level_total: 1000}, {hqla_level: "level_2b", level_total: 200}] | 200              |
 
 ### `level_2b_excess`
 
@@ -277,17 +202,12 @@ Total HQLA after applying the Level 2B cap.
 | 0                  | 0                 | 0                |
 
 [and]: ../language/boolean.md#and
+[bool]: ../language/boolean.md
 [eq]: ../language/equality.md#equal
-[group-by]: ../language/relation.md#group-by
 [gt]: ../language/ordering.md#greater-than
 [ite]: ../language/boolean.md#if-then-else
-[join]: ../language/relation.md#inner-join
 [mul]: ../language/number.md#multiplication
 [neq]: ../language/equality.md#not-equal
 [not]: ../language/boolean.md#not
 [or]: ../language/boolean.md#or
-[rec-get]: ../language/record.md#get
-[rel-sum]: ../language/relation.md#sum
 [sub]: ../language/number.md#subtraction
-[where]: ../language/relation.md#where
-[with-col]: ../language/relation.md#with-column
