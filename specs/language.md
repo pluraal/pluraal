@@ -29,12 +29,16 @@ Concrete data types with named member values.
 
 - [Boolean](language/boolean.md) — a two-valued type representing truth: `true` and `false`.
 - [Ordering Relation](language/ordering-relation.md) — a three-valued type representing the outcome of a comparison: `Less`, `Equal`, or `Greater`.
+- [Text](language/text.md) — a character sequence for identifiers, labels, and descriptive data.
 - [Integer](language/integer.md) — whole numbers with optional fixed precision and signedness.
 - [Floating-Point](language/floating-point.md) — real numbers in binary format with fixed size.
 - [Decimal](language/decimal.md) — real numbers in base-10 format with explicit precision and scale.
+- [Optional](language/optional.md) — a parametric type over a value type `T` representing a present value or its absence.
 - [Collection](language/collection.md) — a parametric type over an element type `T` for holding elements with configurable multiplicity, iteration order, and cardinality constraints.
 - [Collection Multiplicity](language/collection-multiplicity.md) — attribute type for [Collection](language/collection.md) governing whether duplicate elements are permitted.
 - [Collection Iteration Order](language/collection-iteration-order.md) — attribute type for [Collection](language/collection.md) governing the sequence in which elements are visited.
+- [Record](language/record.md) — a finite, ordered collection of named fields representing a structured data row.
+- [Relation](language/relation.md) — a parametric type over a [Record](language/record.md) type for tabular data with relational operations for projection, filtering, joining, grouping, and aggregation.
 
 ### Type Classes
 
