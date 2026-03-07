@@ -119,7 +119,7 @@ function parseListItemExpr(
 function parseScalar(raw: string): Expr {
   if (raw === "true") return { kind: "literal", value: true };
   if (raw === "false") return { kind: "literal", value: false };
-  if (raw.startsWith('"') && raw.endsWith('"')) {
+  if (raw.length >= 2 && raw.startsWith('"') && raw.endsWith('"')) {
     return { kind: "literal", value: raw.slice(1, -1) };
   }
   const num = Number(raw);
@@ -143,7 +143,7 @@ function parseExprFromList(list: List, linkDefs: Map<string, string>): Expr {
 function parseCellValue(raw: string): Value {
   if (raw === "true") return true;
   if (raw === "false") return false;
-  if (raw.startsWith('"') && raw.endsWith('"')) {
+  if (raw.length >= 2 && raw.startsWith('"') && raw.endsWith('"')) {
     return raw.slice(1, -1);
   }
   const num = Number(raw);
