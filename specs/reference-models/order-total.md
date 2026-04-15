@@ -32,9 +32,7 @@ Gross cost before discount or tax.
 
 Amount deducted from the subtotal.
 
-- [Multiply][mul]
-  - `subtotal`
-  - `discount_rate`
+- `subtotal` [\*][mul] `discount_rate`
 
 #### Test cases
 

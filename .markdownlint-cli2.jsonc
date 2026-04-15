@@ -1,4 +1,8 @@
 {
+    "ignores": [
+        "ui/node_modules/**",
+        "ui/dist/**"
+    ],
     "config": {
         // Heading levels should increment one at a time
         "MD001": true,
